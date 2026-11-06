@@ -51,7 +51,7 @@ namespace RiftSurvivor
 
         private void LateUpdate()
         {
-            if (!target || !target.sharedMesh) return;
+            if (!target) return;
             var infos = model ? model.baseRendererInfos : null;
             int slot = -1;
             for (int i = 0; infos != null && i < infos.Length; ++i)
@@ -60,9 +60,9 @@ namespace RiftSurvivor
             {
                 try
                 {
-                    var original = slot >= 0 ? infos[slot].defaultMaterial : target.sharedMaterial;
-                    if (!original) return;
-                    skin ??= new FriendSkin("JieGe", original.shader, Joints);
+                    var shader = SurvivorModel.FindSkinShader(target, slot >= 0 ? infos[slot].defaultMaterial : null);
+                    if (!shader) return;
+                    skin ??= new FriendSkin("JieGe", shader, Joints);
                     rig = new CuiRig(transform, target, body, skin.Pivots);
                     rig.Root.name = "JieGeRig";
                     restPosition = rig.Root.localPosition;
@@ -97,6 +97,8 @@ namespace RiftSurvivor
                 infos[slot].defaultMaterial = skin.Material;
                 model.materialsDirty = true;
             }
+            else if (slot < 0 && target.sharedMaterial != skin.Material)
+                target.sharedMaterial = skin.Material;
             Pose(body ? Time.deltaTime : Time.unscaledDeltaTime);
         }
 

@@ -31,10 +31,8 @@ namespace RiftSurvivor
             bladeCount = Counter("JiePlantedSwords");
             recallReceipt = Counter("JieAcceptedRecall");
             for (int i = 0; i < recallIcons.Length; i++) recallIcons[i] = GymIcons.Get("jie-recall-" + i);
-            swordPrefab = PrefabAPI.CreateEmptyPrefab("JieAzureSword", false);
-            swordPrefab.AddComponent<NetworkIdentity>();
+            swordPrefab = PrefabAPI.CreateEmptyPrefab("JieAzureSword", true);
             swordPrefab.AddComponent<JieAzureSword>();
-            PrefabAPI.RegisterNetworkPrefab(swordPrefab);
             GlobalEventManager.onCharacterDeathServer += FreezeSockets;
             Impact = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Merc/OmniImpactVFXSlashMerc.prefab").WaitForCompletion();
             PierceTracer = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Huntress/TracerHuntressSnipe.prefab").WaitForCompletion();

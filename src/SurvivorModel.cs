@@ -58,7 +58,7 @@ namespace RiftSurvivor
 
         private void LateUpdate()
         {
-            if (!target || !target.sharedMesh) return;
+            if (!target) return;
             var infos = model ? model.baseRendererInfos : null;
             int slot = -1;
             for (int i = 0; infos != null && i < infos.Length; ++i)
@@ -67,9 +67,9 @@ namespace RiftSurvivor
             {
                 try
                 {
-                    var originalMaterial = slot >= 0 ? infos[slot].defaultMaterial : target.sharedMaterial;
-                    if (!originalMaterial) return;
-                    LoadGeometry(originalMaterial.shader);
+                    var shader = FindSkinShader(target, slot >= 0 ? infos[slot].defaultMaterial : null);
+                    if (!shader) return;
+                    LoadGeometry(shader);
                     if (!costume) costume = BuildMesh();
                     var body = model && model.body ? model.body : GetComponentInParent<CharacterBody>();
                     rig = new CuiRig(transform, target, body, pivots);
@@ -91,6 +91,18 @@ namespace RiftSurvivor
                 infos[slot].defaultMaterial = paletteMaterial;
                 model.materialsDirty = true;
             }
+            else if (slot < 0 && target.sharedMaterial != paletteMaterial)
+                target.sharedMaterial = paletteMaterial;
+        }
+
+        // The base prefabs can have a renderer before their addressable mesh or material arrives.
+        internal static Shader FindSkinShader(Renderer renderer, Material slotMaterial)
+        {
+            if (slotMaterial && slotMaterial.shader) return slotMaterial.shader;
+            var gameShader = Shader.Find("Hopoo Games/Deferred/Standard");
+            if (gameShader) return gameShader;
+            var material = renderer.sharedMaterial;
+            return material && material.shader ? material.shader : Shader.Find("Standard");
         }
 
         private void AttachSkin()

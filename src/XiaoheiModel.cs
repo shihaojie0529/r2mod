@@ -43,7 +43,7 @@ namespace RiftSurvivor
 
         private void LateUpdate()
         {
-            if (!target || !target.sharedMesh) return;
+            if (!target) return;
             var infos = model ? model.baseRendererInfos : null;
             int slot = -1;
             for (int i = 0; infos != null && i < infos.Length; ++i)
@@ -52,9 +52,9 @@ namespace RiftSurvivor
             {
                 try
                 {
-                    var original = slot >= 0 ? infos[slot].defaultMaterial : target.sharedMaterial;
-                    if (!original) return;
-                    if (!skin) LoadSkin(original.shader);
+                    var shader = SurvivorModel.FindSkinShader(target, slot >= 0 ? infos[slot].defaultMaterial : null);
+                    if (!shader) return;
+                    if (!skin) LoadSkin(shader);
                     rig = new CuiRig(transform, target, body, pivots);
                     rig.Root.name = "XiaoheiRig";
                     muzzle = new GameObject("XiaoheiMuzzle").transform;
@@ -84,6 +84,8 @@ namespace RiftSurvivor
                 infos[slot].defaultMaterial = cloth;
                 model.materialsDirty = true;
             }
+            else if (slot < 0 && target.sharedMaterial != cloth)
+                target.sharedMaterial = cloth;
             Pose(body ? Time.deltaTime : Time.unscaledDeltaTime);
         }
 

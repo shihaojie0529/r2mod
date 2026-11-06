@@ -41,7 +41,7 @@ namespace RiftSurvivor
 
         private void LateUpdate()
         {
-            if (!target || !target.sharedMesh) return;
+            if (!target) return;
             var infos = model ? model.baseRendererInfos : null;
             int slot = -1;
             for (int i = 0; infos != null && i < infos.Length; ++i)
@@ -50,9 +50,9 @@ namespace RiftSurvivor
             {
                 try
                 {
-                    var original = slot >= 0 ? infos[slot].defaultMaterial : target.sharedMaterial;
-                    if (!original) return;
-                    skin ??= new FriendSkin("WeiGe", original.shader, CuiRig.Names);
+                    var shader = SurvivorModel.FindSkinShader(target, slot >= 0 ? infos[slot].defaultMaterial : null);
+                    if (!shader) return;
+                    skin ??= new FriendSkin("WeiGe", shader, CuiRig.Names);
                     rig = new CuiRig(transform, target, body, skin.Pivots);
                     rig.Root.name = "WeiGeRig";
                     previousPosition = transform.position;

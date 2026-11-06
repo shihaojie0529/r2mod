@@ -43,10 +43,8 @@ namespace RiftSurvivor
         private const float Skin = .035f;
         internal static void Register()
         {
-            pairPrefab = PrefabAPI.CreateEmptyPrefab("WeiLinkedDoors", false);
-            pairPrefab.AddComponent<NetworkIdentity>();
+            pairPrefab = PrefabAPI.CreateEmptyPrefab("WeiLinkedDoors", true);
             pairPrefab.AddComponent<WeiDoorPair>();
-            PrefabAPI.RegisterNetworkPrefab(pairPrefab);
         }
         internal static void Install(GameObject body) => body.AddComponent<WeiPortal>();
 

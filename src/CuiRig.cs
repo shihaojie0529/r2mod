@@ -55,7 +55,7 @@ namespace RiftSurvivor
             var native = original.bones;
             int hips = Find(native, "pelvis", "hips"), head = Find(native, "head");
             int left = Find(native, "thighl", "leftupperleg"), right = Find(native, "thighr", "rightupperleg");
-            if (hips >= 0 && head >= 0 && left >= 0 && right >= 0)
+            if (original.sharedMesh && hips >= 0 && head >= 0 && left >= 0 && right >= 0)
             {
                 var matrices = ReadBindposes(original.sharedMesh);
                 if (Math.Max(Math.Max(hips, head), Math.Max(left, right)) < matrices.Length)

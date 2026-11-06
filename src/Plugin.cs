@@ -6,7 +6,7 @@ using R2API.Utils;
 
 namespace RiftSurvivor
 {
-    [BepInPlugin("local.r2mod.riftsurvivor", "小黑大哥合集", "0.5.2")]
+    [BepInPlugin("local.r2mod.riftsurvivor", "小黑大哥合集", "0.5.3")]
     [BepInDependency(R2APIContentManager.PluginGUID)]
     [BepInDependency(PrefabAPI.PluginGUID)]
     [BepInDependency(LanguageAPI.PluginGUID)]
@@ -14,19 +14,31 @@ namespace RiftSurvivor
     public sealed class Plugin : BaseUnityPlugin
     {
         // Explicit roster: each member registers its own text, skills and SurvivorDef.
-        private static readonly Action[] Roster =
+        private static readonly (string Name, Action Register)[] Roster =
         {
-            SurvivorContent.Register, // 崔哥 (legacy catalog ID: RiftRunner)
-            XiaoheiContent.Register,
-            JieContent.Register,
-            WeiContent.Register,
+            ("崔哥", SurvivorContent.Register),
+            ("小黑", XiaoheiContent.Register),
+            ("杰哥", JieContent.Register),
+            ("伟哥", WeiContent.Register),
         };
 
         private void Awake()
         {
-            foreach (var registerMember in Roster) registerMember();
+            int registered = 0;
+            foreach (var member in Roster)
+            {
+                try
+                {
+                    member.Register();
+                    registered++;
+                }
+                catch (Exception error)
+                {
+                    Logger.LogError($"{member.Name} 注册失败 ({Info.Metadata.Version}): {error}");
+                }
+            }
             HiddenFlight.Register();
-            Logger.LogInfo($"Registered {Roster.Length} friend survivor(s) in {Info.Metadata.Name}.");
+            Logger.LogInfo($"{Info.Metadata.Name} {Info.Metadata.Version}: 已注册 {registered}/{Roster.Length} 位角色。");
         }
     }
 }

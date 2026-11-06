@@ -1,14 +1,16 @@
-# 小黑大哥合集 · 0.5.2
+# 小黑大哥合集 · 0.5.3
 
 本版可选角色为 **伟哥（Wei Ge）**、**杰哥（Jie Ge）**、**小黑（Xiaohei）** 和 **崔哥（Cui Ge）**。和朋友联机时，把同一个 ZIP 发给每位玩家，各自在 r2modman 里导入即可。
+
+0.5.3 修正了选人和进局时等待原版网格才加载模型的问题，并补全了注册状态机和执行技能所需的程序集声明。若某位角色初始化出错，其余角色会继续注册。启动日志会列出失败的角色名和本次注册人数。
 
 0.5.2 修正了伟哥抓空后暂停自动投掷、任意门关闭时漏传，以及崔哥冲肩穿门的判伤。杰哥联机收剑和开大按出手时的位置和瞄准目标结算。小黑的琥珀环随有效标记显示。餐椅、沙发和飞剑护手也修正了部分表面朝向。
 
 ## 用 r2modman 安装或更新
 
 1. 选择 **Risk of Rain 2** 并打开一个配置。在 **Online** 中安装 **bbepis 的 BepInExPack** 和 **RiskofThunder 的 R2API_Core、R2API_ContentManagement、R2API_Prefab、R2API_Language**，同时安装管理器提示的依赖。
-2. 退出游戏，在配置的 **Settings** 中搜索 **local mod**，选择 **Import local mod**（部分版本叫 **Install local mod**），直接选 `LocalMods-XiaoHeiDaGeHeJi-0.5.2.zip`。如果配置中装过旧包名 `RiftSurvivor`，先在 **Installed** 移除旧包，再导入新包。
-3. 在 **Installed** 确认 **XiaoHeiDaGeHeJi 0.5.2** 已启用，点击 **Start modded**。联机时，房主和所有玩家都更新到同一版本。
+2. 退出游戏，在配置的 **Settings** 中搜索 **local mod**，选择 **Import local mod**（部分版本叫 **Install local mod**），直接选 `LocalMods-XiaoHeiDaGeHeJi-0.5.3.zip`。如果配置中装过旧包名 `RiftSurvivor`，先在 **Installed** 移除旧包，再导入新包。
+3. 在 **Installed** 确认 **XiaoHeiDaGeHeJi 0.5.3** 已启用，点击 **Start modded**。联机时，房主和所有玩家都更新到同一版本。
 
 ## 全员隐藏飞行
 

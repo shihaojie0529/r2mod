@@ -158,7 +158,7 @@ namespace RiftSurvivor
         }
 
         internal static XiaoheiMarks ActiveMarks(HealthComponent victim) =>
-            victim && victim.body && victim.body.HasBuff(marked) ? victim.GetComponent<XiaoheiMarks>() : null;
+            marked && victim && victim.body && victim.body.HasBuff(marked) ? victim.GetComponent<XiaoheiMarks>() : null;
 
         internal static void Speak(string token) =>
             Chat.SendBroadcastChat(new Chat.SimpleChatMessage { baseToken = token });
