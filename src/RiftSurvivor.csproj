@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Version>0.5.2</Version>
+    <!-- Prefab registration can use the calling assembly's identity for network IDs. -->
+    <AssemblyVersion>0.2.0.0</AssemblyVersion>
+    <FileVersion>$(Version).0</FileVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="../art/generated/cui-portrait.png" LogicalName="RiftSurvivor.portrait.png" />
+    <EmbeddedResource Include="../art/generated/xiaohei-portrait.png" LogicalName="RiftSurvivor.xiaohei-portrait.png" />
+    <EmbeddedResource Include="../art/generated/xiaohei-model.json" LogicalName="RiftSurvivor.xiaohei-model.json" />
+    <EmbeddedResource Include="../art/generated/jiege-portrait.png" LogicalName="RiftSurvivor.jiege-portrait.png" />
+    <EmbeddedResource Include="../art/generated/jiege-model.json" LogicalName="RiftSurvivor.jiege-model.json" />
+    <EmbeddedResource Include="../art/generated/weige-portrait.png" LogicalName="RiftSurvivor.weige-portrait.png" />
+    <EmbeddedResource Include="../art/generated/weige-model.json" LogicalName="RiftSurvivor.weige-model.json" />
+    <EmbeddedResource Include="../art/generated/model.json" LogicalName="RiftSurvivor.model.json" />
+    <EmbeddedResource Include="../art/generated/motion.json" LogicalName="RiftSurvivor.motion.json" />
+    <EmbeddedResource Include="../art/generated/props.json" LogicalName="RiftSurvivor.props.json" />
+    <EmbeddedResource Include="../art/generated/icons/*.png" LogicalName="RiftSurvivor.icons.%(Filename)%(Extension)" />
+    <PackageReference Include="BepInEx.Core" Version="5.4.21" />
+    <PackageReference Include="UnityEngine.Modules" Version="2021.3.33" />
+    <PackageReference Include="RiskOfRain2.GameLibs" Version="1.5.0-r.1" />
+    <PackageReference Include="R2API.Core" Version="5.3.0" />
+    <PackageReference Include="R2API.Prefab" Version="1.1.1" />
+    <PackageReference Include="R2API.ContentManagement" Version="1.1.0" />
+    <PackageReference Include="R2API.Language" Version="1.1.0" />
+  </ItemGroup>
+</Project>
