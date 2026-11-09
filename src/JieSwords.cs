@@ -16,19 +16,24 @@ namespace RiftSurvivor
         internal const int Capacity = 9;
         private static readonly List<JieSwords> owners = new List<JieSwords>();
         private static readonly Sprite[] recallIcons = new Sprite[Capacity + 1];
-        private static BuffDef bladeCount, recallReceipt;
+        private static BuffDef bladeCount, deployedCount, recallReceipt;
         private static GameObject swordPrefab;
         internal static GameObject Impact { get; private set; }
         internal static GameObject PierceTracer { get; private set; }
         private readonly List<JieAzureSword> planted = new List<JieAzureSword>(Capacity);
+        private readonly HashSet<JieAzureSword> deployed = new HashSet<JieAzureSword>();
         private CharacterBody body;
         private double nextPrimary;
         private bool awaitingReceipts;
-        private int lastReceipt, nextFan;
+        private int lastReceipt, nextFan, nextDock;
 
         internal static void Register()
         {
             bladeCount = Counter("JiePlantedSwords");
+            bladeCount.isHidden = false;
+            bladeCount.iconSprite = GymIcons.Get("jie-draw");
+            bladeCount.buffColor = new Color(.18f, .92f, .81f);
+            deployedCount = Counter("JieDeployedSwords");
             recallReceipt = Counter("JieAcceptedRecall");
             for (int i = 0; i < recallIcons.Length; i++) recallIcons[i] = GymIcons.Get("jie-recall-" + i);
             swordPrefab = PrefabAPI.CreateEmptyPrefab("JieAzureSword", true);
@@ -47,7 +52,11 @@ namespace RiftSurvivor
             return counter;
         }
 
-        internal static void Install(GameObject prefab) => prefab.AddComponent<JieSwords>();
+        internal static void Install(GameObject prefab)
+        {
+            prefab.AddComponent<JieSwords>();
+            prefab.AddComponent<JieSwordRackVisual>();
+        }
         private void Awake() => body = GetComponent<CharacterBody>();
         private void OnEnable() => owners.Add(this);
         private void OnDisable() => owners.Remove(this);
@@ -55,6 +64,10 @@ namespace RiftSurvivor
         internal static int Count(GenericSkill slot) =>
             slot && slot.characterBody && bladeCount ? Mathf.Clamp(slot.characterBody.GetBuffCount(bladeCount), 0, Capacity) : 0;
         internal static Sprite RecallIcon(GenericSkill slot) => recallIcons[Count(slot)];
+        // Recall empties the planted list before the actors actually arrive home.
+        // The synchronized live count prevents a second rack appearing mid-flight.
+        internal static int ReadyCount(CharacterBody owner) => owner && deployedCount
+            ? Capacity - Mathf.Clamp(owner.GetBuffCount(deployedCount), 0, Capacity) : Capacity;
 
         internal void Launch(Ray aim, float interval)
         {
@@ -68,7 +81,10 @@ namespace RiftSurvivor
             }
             var target = FindTarget(body, aim, false);
             var sword = Instantiate(swordPrefab, aim.origin, Util.QuaternionSafeLookRotation(aim.direction));
-            sword.GetComponent<JieAzureSword>().Launch(this, body, target);
+            var actor = sword.GetComponent<JieAzureSword>();
+            actor.Launch(this, body, target);
+            deployed.Add(actor);
+            PublishDeployed();
             NetworkServer.Spawn(sword);
         }
 
@@ -114,9 +130,18 @@ namespace RiftSurvivor
         internal void Forget(JieAzureSword sword)
         {
             if (planted.Remove(sword) && body && NetworkServer.active) PublishCount();
+            if (deployed.Remove(sword) && body && NetworkServer.active) PublishDeployed();
+        }
+
+        internal int ClaimReturnSocket()
+        {
+            int result = nextDock;
+            nextDock = (nextDock + 1) % Capacity;
+            return result;
         }
 
         private void PublishCount() => body.SetBuffCount(bladeCount.buffIndex, planted.Count);
+        private void PublishDeployed() => body.SetBuffCount(deployedCount.buffIndex, Mathf.Min(Capacity, deployed.Count));
 
         // Keep the attachment reference through the damage call. A lethal plate
         // slam can still identify the socket before its next physics tick drops the sword.

@@ -1,6 +1,6 @@
 {
   "name": "XiaoHeiDaGeHeJi",
-  "version_number": "0.5.3",
+  "version_number": "0.5.17",
   "website_url": "",
   "description": "小黑大哥合集包含小黑、伟哥、杰哥和崔哥四位幸存者。伟哥能自动锁敌投掷家具，抓怪穿任意门，四人联手可召来一桌饭。全员按 X 可切换准星飞行。",
   "dependencies": [

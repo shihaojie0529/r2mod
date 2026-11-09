@@ -13,7 +13,7 @@ namespace RiftSurvivor
         private static Material chairFinish, sofaFinish;
         private static Material material;
         private static Material Paint => material ? material :
-            (material = new Material(Shader.Find("Sprites/Default") ?? Shader.Find("Standard")) { name = "WeiFurniturePaint" });
+            (material = CombatVisuals.Stroke("WeiFurniturePaint"));
 
         internal static void Attach(Transform root, bool couch)
         {
@@ -23,7 +23,8 @@ namespace RiftSurvivor
             filter.sharedMesh = couch ? sofa : chair;
             var view = root.gameObject.AddComponent<MeshRenderer>();
             view.sharedMaterial = couch ? sofaFinish : chairFinish;
-            view.shadowCastingMode = ShadowCastingMode.Off;
+            view.shadowCastingMode = ShadowCastingMode.On;
+            view.receiveShadows = true;
         }
 
         private static Mesh Build(bool couch, out Material finish)
@@ -41,34 +42,50 @@ namespace RiftSurvivor
             // Opaque palette faces share one mesh and one material per furnishing.
             void Block(Vector3 center, Vector3 size, Color color, float bevel = .025f, float tilt = 0f)
             {
-                float x=size.x*.5f, y=size.y*.5f, z=size.z*.5f;
-                float b=Mathf.Min(bevel,x*.40f,z*.40f);
-                var corners = new[]{new Vector2(-x+b,-z),new Vector2(x-b,-z),new Vector2(x,-z+b),new Vector2(x,z-b),
-                    new Vector2(x-b,z),new Vector2(-x+b,z),new Vector2(-x,z-b),new Vector2(-x,-z+b)};
-                var rot = Quaternion.Euler(tilt,0,0);
-                void Face(Vector3[] points, float tone)
+                var half = size * .5f;
+                float b = Mathf.Min(bevel, half.x * .38f, half.y * .38f, half.z * .38f);
+                var rot = Quaternion.Euler(tilt, 0, 0);
+                Vector3 Point(int axis, float value) { var p = Vector3.zero; p[axis] = value; return p; }
+                void Face(params Vector3[] points)
                 {
-                    int start = verts.Count;
-                    Color32 tint = new Color(color.r*tone,color.g*tone,color.b*tone,1f);
+                    var normal = Vector3.Cross(points[1] - points[0], points[2] - points[0]).normalized;
+                    var middle = Vector3.zero;
+                    foreach (var p in points) middle += p / points.Length;
+                    if (Vector3.Dot(normal, middle) < 0f) System.Array.Reverse(points);
+                    int first = verts.Count;
+                    Color32 tint = color;
                     int swatch = swatches.IndexOf(tint);
                     if (swatch < 0) { swatch = swatches.Count; swatches.Add(tint); }
-                    foreach (var p in points)
-                    {
-                        verts.Add(center+rot*p);
-                        colorIndices.Add(swatch);
-                    }
-                    for(int i=1;i+1<points.Length;i++){indices.Add(start);indices.Add(start+i);indices.Add(start+i+1);}
+                    foreach (var p in points) { verts.Add(center + rot * p); colorIndices.Add(swatch); }
+                    for (int i = 1; i + 1 < points.Length; i++) { indices.Add(first); indices.Add(first + i); indices.Add(first + i + 1); }
                 }
-                var top=new Vector3[8];var bottom=new Vector3[8];
-                for(int i=0;i<8;i++)
+                // Six faces, twelve edge bevels and eight corner caps.
+                for (int axis = 0; axis < 3; axis++)
                 {
-                    top[i]=new Vector3(corners[i].x,y,corners[i].y);
-                    bottom[i]=new Vector3(corners[i].x,-y,corners[i].y);
+                    int u = (axis + 1) % 3, v = (axis + 2) % 3;
+                    foreach (int sign in new[] { -1, 1 })
+                    {
+                        var c = Point(axis, half[axis] * sign);
+                        var a = Point(u, half[u] - b); var d = Point(v, half[v] - b);
+                        Face(c - a - d, c + a - d, c + a + d, c - a + d);
+                    }
                 }
-                Face(bottom,.6f);
-                for(int i=0;i<8;i++){int j=(i+1)%8;Face(new[]{top[i],top[j],bottom[j],bottom[i]},.78f+.16f*Mathf.Sin(i*.8f));}
-                System.Array.Reverse(top);
-                Face(top,1.08f);
+                for (int axis = 0; axis < 3; axis++)
+                {
+                    int u = (axis + 1) % 3, v = (axis + 2) % 3;
+                    foreach (int x in new[] { -1, 1 }) foreach (int y in new[] { -1, 1 })
+                    {
+                        var a = Point(u, half[u] * x) + Point(v, (half[v] - b) * y);
+                        var c = Point(u, (half[u] - b) * x) + Point(v, half[v] * y);
+                        var d = Point(axis, half[axis] - b);
+                        Face(a - d, c - d, c + d, a + d);
+                    }
+                }
+                foreach (int x in new[] { -1, 1 }) foreach (int y in new[] { -1, 1 }) foreach (int z in new[] { -1, 1 })
+                {
+                    var c = Vector3.Scale(half - Vector3.one * b, new Vector3(x,y,z));
+                    Face(c + Point(0, x*b), c + Point(1, y*b), c + Point(2, z*b));
+                }
             }
             if (couch)
             {
@@ -82,6 +99,14 @@ namespace RiftSurvivor
                     Block(new Vector3(s*.385f,.19f,-.30f),new Vector3(.755f,.51f,.20f),upholstery,.07f,-9f);
                     Block(new Vector3(s*.83f,.052f,0),new Vector3(.17f,.29f,.81f),upholstery,.055f);
                 }
+                foreach (int sign in new[] { -1, 1 })
+                {
+                    // Upholstery seams remain geometry at normal play distance.
+                    Block(new Vector3(sign*.385f,.19f,-.408f), new Vector3(.012f,.38f,.009f), piping, .003f, -9f);
+                    Block(new Vector3(sign*.385f,.39f,-.335f), new Vector3(.60f,.009f,.014f), piping, .003f, -9f);
+                    Block(new Vector3(sign*.385f,.17f,-.420f), new Vector3(.035f,.035f,.009f), upholstery, .008f);
+                    Block(new Vector3(sign*.385f,.053f,.377f), new Vector3(.66f,.009f,.012f), linen, .003f);
+                }
                 Block(new Vector3(-.47f,.18f,-.12f),new Vector3(.31f,.25f,.16f),linen,.055f,-15f);
             }
             else
@@ -94,16 +119,20 @@ namespace RiftSurvivor
                     Block(new Vector3(s*.218f,.22f,-.235f),new Vector3(.065f,.52f,.064f),walnut,.012f,-7f);
                 Block(new Vector3(0,.396f,-.267f),new Vector3(.57f,.15f,.061f),oak,.025f,-7f);
                 Block(new Vector3(0,.215f,-.248f),new Vector3(.49f,.060f,.047f),oak,.016f,-7f);
+                foreach (int sign in new[] { -1, 1 })
+                {
+                    Block(new Vector3(sign*.21f,-.19f,0), new Vector3(.028f,.034f,.40f), oak, .007f);
+                    Block(new Vector3(sign*.255f,.039f,.018f), new Vector3(.008f,.008f,.46f), piping, .002f);
+                }
+                Block(new Vector3(0,-.18f,.20f), new Vector3(.42f,.034f,.028f), oak, .007f);
+                Block(new Vector3(0,.039f,.255f), new Vector3(.50f,.008f,.008f), piping, .002f);
             }
             var mesh=new Mesh{name=couch?"WeiTwoSeatSofa":"WeiDiningChair"};
             mesh.SetVertices(verts);
             mesh.SetUVs(0, colorIndices.ConvertAll(i => new Vector2((i + .5f) / swatches.Count, .5f)));
-            mesh.SetTriangles(indices,0);mesh.RecalculateNormals();mesh.RecalculateBounds();
-            finish = new Material(Shader.Find("Unlit/Texture") ?? Shader.Find("Standard"))
-            {
-                name = mesh.name + "Finish",
-                mainTexture = FriendSkin.Palette(mesh.name + "Palette", swatches.ToArray())
-            };
+            mesh.SetTriangles(indices,0);CombatVisuals.SmoothNormals(mesh, 52f);mesh.RecalculateBounds();
+            finish = CombatVisuals.Surface(mesh.name + "Finish",
+                FriendSkin.Palette(mesh.name + "Palette", swatches.ToArray()), couch ? .18f : .26f);
             return mesh;
         }
 

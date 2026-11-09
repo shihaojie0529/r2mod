@@ -249,7 +249,7 @@ namespace RiftSurvivor
             mesh.SetVertices(vertices);
             mesh.SetUVs(0, uv);
             mesh.SetTriangles(indices, 0);
-            mesh.RecalculateNormals();
+            CombatVisuals.SmoothNormals(mesh, 42f);
             mesh.RecalculateBounds();
             mesh.UploadMeshData(true);
 
@@ -258,13 +258,8 @@ namespace RiftSurvivor
                 name = mesh.name + "Palette", filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp
             };
             texture.SetPixels32(swatches);
-            texture.Apply(false, true);
-            var material = new Material(shader) { name = mesh.name + "Material" };
-            material.SetTexture("_MainTex", texture);
-            if (material.HasProperty("_Color")) material.SetColor("_Color", Color.white);
-            if (material.HasProperty("_Cull")) material.SetFloat("_Cull", (float)CullMode.Off);
-            if (material.HasProperty("_NormalStrength")) material.SetFloat("_NormalStrength", 0f);
-            if (material.HasProperty("_Smoothness")) material.SetFloat("_Smoothness", kind == "plate" ? .35f : .18f);
+            texture.Apply(false, false);
+            var material = CombatVisuals.Surface(mesh.name + "Material", texture, kind == "plate" ? .42f : .28f);
             return new Prop { mesh = mesh, material = material };
         }
     }

@@ -85,6 +85,9 @@ namespace RiftSurvivor
             var gravity = motor.gravityParameters;
             gravity.channeledAntiGravityGranterCount += on ? 1 : -1;
             motor.gravityParameters = gravity;
+            var flying = motor.flightParameters;
+            flying.channeledFlightGranterCount += on ? 1 : -1;
+            motor.flightParameters = flying;
             antiGravity = on;
             if (!on) return;
             if (motor.isGrounded) motor.rootMotion += Vector3.up * .18f;
@@ -120,13 +123,20 @@ namespace RiftSurvivor
             // Keep the sword mounted and process its jump gestures; the optional X
             // controller supplies pitch-directed steering until the player switches it off.
             if (HiddenFlight.IsEnabled(body)) return;
-            var movement = Vector3.ProjectOnPlane(body.inputBank.moveVector, Vector3.up);
+            var movement = FlightDirection(body);
             motor.moveDirection = movement;
-            // Pitch never directs the board into the ground. The motor still
-            // resolves walls and ceilings, and normal damage states may interrupt attacks.
-            var velocity = movement * body.moveSpeed;
-            velocity.y = down && held >= HoldTime ? Mathf.Max(4f, body.moveSpeed * .8f) : 0f;
-            motor.velocity = velocity;
+            motor.velocity = movement * body.moveSpeed;
+        }
+
+        internal static Vector3 FlightDirection(CharacterBody owner)
+        {
+            if (!owner || !owner.inputBank) return Vector3.zero;
+            var right = owner.transform.right;
+            foreach (var local in LocalUserManager.readOnlyLocalUsersList)
+                if (local.cachedBody == owner && local.cameraRigController && local.cameraRigController.sceneCam)
+                { right = local.cameraRigController.sceneCam.transform.right; break; }
+            var move = owner.inputBank.rawMoveData;
+            return HiddenFlight.FlightDirection(owner.inputBank.aimDirection, right, move.y, move.x);
         }
 
         private void OnDisable() => SetAntiGravity(false);
@@ -135,34 +145,63 @@ namespace RiftSurvivor
     public sealed class JieDash : BaseSkillState
     {
         internal const float Distance = 16f;
-        private const float Duration = .24f;
-        private Vector3 direction;
-        private float remaining = Distance;
+        private Vector3 departure, destination;
+        private bool blinked;
 
         public override void OnEnter()
         {
             base.OnEnter();
+            var slot = skillLocator ? skillLocator.utility : null;
             var flight = GetComponent<JieFlight>();
-            if (flight) flight.dashRecallUntil = Time.fixedTime + Duration + .35f;
-            if (!isAuthority) return;
-            var move = inputBank.moveVector;
-            direction = move.sqrMagnitude > .001f ? Vector3.ProjectOnPlane(move, Vector3.up).normalized : GetAimRay().direction;
-            if (direction.sqrMagnitude < .001f) direction = transform.forward;
-            characterMotor.Motor.ForceUnground();
-            characterMotor.velocity = Vector3.zero;
+            if (!flight || !healthComponent || !healthComponent.alive || !slot ||
+                slot.stateMachine != outer || slot.activationState.stateType != typeof(JieDash)) return;
+            if (UnityEngine.Networking.NetworkServer.active &&
+                !CuiServerCharges.TrySpend(characterBody, slot, true)) return;
+            flight.dashRecallUntil = Time.fixedTime + .4f;
+            if (isAuthority && characterMotor && characterMotor.Motor)
+            {
+                departure = transform.position;
+                var direction = JieFlight.FlightDirection(characterBody);
+                if (direction.sqrMagnitude < .001f) direction = GetAimRay().direction.normalized;
+                blinked = JieBlink.TryDestination(characterMotor, direction, Distance, out destination);
+                if (blinked)
+                {
+                    characterMotor.rootMotion = characterMotor.velocity = Vector3.zero;
+                    characterMotor.Motor.ForceUnground();
+                    characterMotor.Motor.SetPosition(destination, true);
+                }
+                flight.Mount();
+            }
+            // The owner teleports once; native network transforms carry the new
+            // position. The state packet carries only the visual endpoints to peers.
+            if (UnityEngine.Networking.NetworkClient.active && blinked && ValidVisual(departure, destination))
+            {
+                var coreOffset = characterBody.corePosition - transform.position;
+                JieBlinkVisual.Show(departure + coreOffset, destination + coreOffset);
+                Util.PlaySound("Play_huntress_shift_mini_blink", gameObject);
+            }
+        }
+
+        private static bool ValidVisual(Vector3 from, Vector3 to) =>
+            !float.IsNaN(from.sqrMagnitude) && !float.IsInfinity(from.sqrMagnitude) &&
+            (to - from).sqrMagnitude > .0001f && (to - from).sqrMagnitude <= (Distance + .1f) * (Distance + .1f);
+
+        public override void OnSerialize(UnityEngine.Networking.NetworkWriter writer)
+        {
+            base.OnSerialize(writer);
+            writer.Write(blinked); writer.Write(departure); writer.Write(destination);
+        }
+
+        public override void OnDeserialize(UnityEngine.Networking.NetworkReader reader)
+        {
+            base.OnDeserialize(reader);
+            blinked = reader.ReadBoolean(); departure = reader.ReadVector3(); destination = reader.ReadVector3();
         }
 
         public override void FixedUpdate()
         {
             base.FixedUpdate();
-            if (!isAuthority) return;
-            float step = Mathf.Min(remaining, Distance * Time.fixedDeltaTime / Duration);
-            characterMotor.velocity = Vector3.zero;
-            characterMotor.rootMotion += direction * step;
-            remaining -= step;
-            if (remaining > .001f) return;
-            GetComponent<JieFlight>().Mount();
-            outer.SetNextStateToMain();
+            if (isAuthority) outer.SetNextStateToMain();
         }
 
         public override InterruptPriority GetMinimumInterruptPriority() => InterruptPriority.PrioritySkill;

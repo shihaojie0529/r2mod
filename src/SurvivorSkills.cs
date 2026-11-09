@@ -29,7 +29,8 @@ namespace RiftSurvivor
             Define(slots.primary, combo, Register<ComboPunch>(), "PUNCH", "punch", "Weapon", 0f, 0, InterruptPriority.Any);
             Define(slots.secondary, ScriptableObject.CreateInstance<SkillDef>(), Register<PlateSlam>(),
                 "SLAM", "slam", "Weapon", 5f, 1, InterruptPriority.Skill);
-            Define(slots.utility, ScriptableObject.CreateInstance<SkillDef>(), Register<ShoulderCharge>(),
+            Register<ShoulderCharge>();
+            Define(slots.utility, ScriptableObject.CreateInstance<SkillDef>(), Register<CuiChargeWindup>(),
                 "CHARGE", "charge", "Body", 6f, 1, InterruptPriority.PrioritySkill);
             Define(slots.special, ScriptableObject.CreateInstance<SkillDef>(), new SerializableEntityStateType(typeof(ShakerAim)),
                 "SHAKER", "shaker", "Weapon", 8f, 0, InterruptPriority.Skill);
@@ -68,7 +69,7 @@ namespace RiftSurvivor
             skill.fullRestockOnAssign = true;
             skill.beginSkillCooldownOnSkillEnd = false;
             skill.cancelSprintingOnActivation = true;
-            skill.mustKeyPress = token == "SHAKER";
+            skill.mustKeyPress = token == "SHAKER" || token == "CHARGE";
             skill.isCombatSkill = token != "SHAKER";
             Assign(slot, skill, "CuiGe" + token, "CUIGE_" + token, icon, machine, state, priority);
         }

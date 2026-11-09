@@ -28,9 +28,9 @@ namespace RiftSurvivor
                 "按住光能手槍，每秒連射 3 發，每發造成<style=cIsDamage>220% 傷害</style>。空中也能穩定射擊。");
             Add("XIAOHEI_SEEKER_NAME", "Whiffed That One", "这波马了", "這波馬了");
             Add("XIAOHEI_SEEKER_DESC",
-                "Fire a seeking round for <style=cIsDamage>550% damage</style> and mark its target with an amber ring for 5s. Hold a direction to slide 6m, even in midair. Hit within 1.5s of a primary miss to count that miss toward your streak. Cooldown 4s.",
-                "追踪弹造成<style=cIsDamage>550% 伤害</style>，在目标头顶留下持续 5 秒的琥珀色光环。开枪时按住方向键可侧滑 6 米，空中可用。左键打空后 1.5 秒内补中，把那发空枪算回连击。冷却 4 秒。",
-                "追蹤彈造成<style=cIsDamage>550% 傷害</style>，在目標頭頂留下持續 5 秒的琥珀色光環。開槍時按住方向鍵可側滑 6 公尺，空中可用。左鍵打空後 1.5 秒內補中，把那發空槍算回連擊。冷卻 4 秒。");
+                "Fire a seeking round for <style=cIsDamage>550% damage</style> and mark its target with an amber ring for 5s. Hold a direction to slide 6m, even in midair. Hit within 1.5s of a primary miss to count that miss toward your streak. Cooldown 4s. Direct kills fully reset this skill.",
+                "追踪弹造成<style=cIsDamage>550% 伤害</style>，在目标头顶留下持续 5 秒的琥珀色光环。开枪时按住方向键可侧滑 6 米，空中可用。左键打空后 1.5 秒内补中，把那发空枪算回连击。冷却 4 秒。此技能直接击杀敌人时刷新冷却与全部充能。",
+                "追蹤彈造成<style=cIsDamage>550% 傷害</style>，在目標頭頂留下持續 5 秒的琥珀色光環。開槍時按住方向鍵可側滑 6 公尺，空中可用。左鍵打空後 1.5 秒內補中，把那發空槍算回連擊。冷卻 4 秒。此技能直接擊殺敵人時刷新冷卻與全部充能。");
             Add("XIAOHEI_BLINK_NAME", "Lag Spike", "卡了卡了", "卡了卡了");
             Add("XIAOHEI_BLINK_DESC",
                 "Tap to blink 12m in your movement direction. Your first blink leaves an afterimage for 3s. Hold while it remains to return for free, even at zero stock. Stores 2 charges, recharging one every 2s.",
@@ -38,9 +38,9 @@ namespace RiftSurvivor
                 "點按朝移動方向閃現 12 公尺，可在空中連閃。首次閃現留下 3 秒殘影。殘影還在時長按可免費回位，充能耗盡也能回。最多 2 層，每 2 秒恢復 1 層。");
             Add("XIAOHEI_REPLAY_NAME", "Roll the Old Clip", "放段以前的", "放段以前的");
             Add("XIAOHEI_REPLAY_DESC",
-                "Your past self fires 6 rounds toward your crosshair over 1.5s for <style=cIsDamage>250% damage</style> each. Spend all Highlight for 2 extra rounds per stack, up to 12. You remain free to fire, slide and blink. Cooldown 10s.",
-                "巅峰时期的你在 1.5 秒内朝准星打出 6 发，每发<style=cIsDamage>250% 伤害</style>。消耗全部高光，每层多打 2 发，满层共 12 发。分身开火时，本人仍可开枪、侧滑和闪现。冷却 10 秒。",
-                "巔峰時期的你在 1.5 秒內朝準星打出 6 發，每發<style=cIsDamage>250% 傷害</style>。消耗全部高光，每層多打 2 發，滿層共 12 發。分身開火時，本人仍可開槍、側滑和閃現。冷卻 10 秒。");
+                "Leave a giant luminous replay at your cast location for 4s. It automatically targets visible enemies within 60m and fires 18 rounds for <style=cIsDamage>250% damage</style> each. Spend all Highlight for 6 extra rounds per stack, up to 36. You remain free to fire, slide and blink. Cooldown 10s.",
+                "在施放位置留下持续 4 秒的巨型发光分身，自动锁定周围 60 米内可见敌人，连射 18 发，每发<style=cIsDamage>250% 伤害</style>。消耗全部高光，每层多打 6 发，满层共 36 发。目标死亡或失去视线后自动换目标。本人仍可开枪、侧滑和闪现。冷却 10 秒。",
+                "在施放位置留下持續 4 秒的巨型發光分身，自動鎖定周圍 60 公尺內可見敵人，連射 18 發，每發<style=cIsDamage>250% 傷害</style>。消耗全部高光，每層多打 6 發，滿層共 36 發。目標死亡或失去視線後自動換目標。本人仍可開槍、側滑和閃現。冷卻 10 秒。");
             Add("XIAOHEI_BOND_COVER", "Xiaohei: “For you? I've always got the angle.”",
                 "小黑：「别人我不一定架，你我肯定架。」", "小黑：「別人我不一定架，你我肯定架。」");
             Add("XIAOHEI_BOND_CUP", "Xiaohei: “See that? He saved one just for me.”",

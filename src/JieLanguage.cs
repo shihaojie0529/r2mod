@@ -18,9 +18,9 @@ namespace RiftSurvivor
                 "……于是他消失了，本命剑仍悬在他落脚的地方。", "……於是他消失了，本命劍仍懸在他落腳的地方。");
             Add("JIEGE_FLIGHT_NAME", "Sword Rider", "御剑凌空", "御劍凌空");
             Add("JIEGE_FLIGHT_DESC",
-                "Jump, then tap jump again to mount your sword. Move to glide, hold jump to rise and release to hover. Tap jump to dismount or remount midfall. Fly for as long as you like.",
-                "起跳后再轻点跳跃即可踏剑。移动键平飞，长按跳跃升高，松手悬停。轻点跳跃收剑下落，下落中再点即可重新踏剑。御剑没有时限或冷却。",
-                "起跳後再輕點跳躍即可踏劍。移動鍵平飛，長按跳躍升高，鬆手懸停。輕點跳躍收劍下落，下落中再點即可重新踏劍。御劍沒有時限或冷卻。");
+                "Jump, then tap jump again to mount your sword. W/S fly forward/backward along your crosshair, A/D strafe; release movement to hover. Tap jump to dismount or remount midfall. Fly for as long as you like.",
+                "起跳后再轻点跳跃即可踏剑。W/S 沿准星方向前后飞行，A/D 横移，松开移动键悬停。抬头上升，低头下降。轻点跳跃收剑下落，下落中再点即可重新踏剑。御剑没有时限或冷却。",
+                "起跳後再輕點跳躍即可踏劍。W/S 沿準星方向前後飛行，A/D 橫移，鬆開移動鍵懸停。抬頭上升，低頭下降。輕點跳躍收劍下落，下落中再點即可重新踏劍。御劍沒有時限或冷卻。");
             Add("JIEGE_DRAW_NAME", "Unsheathe", "出鞘", "出鞘");
             Add("JIEGE_DRAW_DESC",
                 "Hold to launch 3 jade blades per second for <style=cIsDamage>160% damage</style> each. A blade tracks the visible enemy closest to your aim within 60m ahead, or flies straight. Blades lodge in enemies and terrain. Keep up to 9.",
@@ -28,14 +28,14 @@ namespace RiftSurvivor
                 "按住每秒射出 3 柄青劍，每劍造成<style=cIsDamage>160% 傷害</style>。優先追擊前方 60 公尺內最靠近準星的可見敵人，無目標則直飛。命中敵人或地形會留劍，最多 9 柄，第十柄替換最早的一柄。");
             Add("JIEGE_RECALL_NAME", "Return to Me", "剑来", "劍來");
             Add("JIEGE_RECALL_DESC",
-                "Recall every lodged blade to your position at cast time. Each strikes its host and pierces enemies along the way for <style=cIsDamage>180% damage per enemy</style>. Walls stop the blades. Cooldown 4s, spent only when blades return.",
-                "所有留剑直线飞回你出招时的位置。每柄对附着目标和沿途敌人各造成<style=cIsDamage>180% 伤害</style>，九剑全中为 1620%。回程遇墙即停。冷却 4 秒，无剑时不消耗冷却。",
-                "所有留劍直線飛回你出招時的位置。每柄對附著目標和沿途敵人各造成<style=cIsDamage>180% 傷害</style>，九劍全中為 1620%。回程遇牆即停。冷卻 4 秒，無劍時不消耗冷卻。");
+                "Recall every lodged blade to your position at cast time. Each strikes its host and pierces enemies along the way for <style=cIsDamage>180% damage per enemy</style>. Walls stop the blades. Cooldown 4s, spent only when blades return. Direct recall kills fully reset this skill; lodged blades are still required.",
+                "所有留剑直线飞回你出招时的位置。每柄对附着目标和沿途敌人各造成<style=cIsDamage>180% 伤害</style>，九剑全中为 1620%。回程遇墙即停。冷却 4 秒，无剑时不消耗冷却。回剑直接击杀敌人时刷新冷却与全部充能，再次召回仍需留剑。",
+                "所有留劍直線飛回你出招時的位置。每柄對附著目標和沿途敵人各造成<style=cIsDamage>180% 傷害</style>，九劍全中為 1620%。回程遇牆即停。冷卻 4 秒，無劍時不消耗冷卻。回劍直接擊殺敵人時刷新冷卻與全部充能，再次召回仍需留劍。");
             Add("JIEGE_DASH_NAME", "Catch the Wind", "乘风换位", "乘風換位");
             Add("JIEGE_DASH_DESC",
-                "Fly 16m in your movement direction, or along your aim if standing still. Finish hovering on your sword. You can take damage during the dash. Cooldown 6s.",
-                "沿移动方向疾飞 16 米，松开方向键则沿准星突进。结束时踏剑悬停，途中仍会受伤。冷却 6 秒。",
-                "沿移動方向疾飛 16 公尺，鬆開方向鍵則沿準星突進。結束時踏劍懸停，途中仍會受傷。冷卻 6 秒。");
+                "Instantly blink 16m in your flight direction, or along your crosshair while stationary. Walls stop the blink. Leave jade sword echoes and finish hovering on your sword. Cooldown 2s.",
+                "沿飞行方向瞬间闪现 16 米，无移动输入时朝准星闪现。遇墙停在墙前，留下青白剑光与残剑，结束时踏剑悬停。冷却 2 秒。",
+                "沿飛行方向瞬間閃現 16 公尺，無移動輸入時朝準星閃現。遇牆停在牆前，留下青白劍光與殘劍，結束時踏劍懸停。冷卻 2 秒。");
             Add("JIEGE_STORM_NAME", "Sword Tempest", "万剑归宗", "萬劍歸宗");
             Add("JIEGE_STORM_DESC",
                 "Over 6s, launch six waves of six golden swords for <style=cIsDamage>200% damage per sword</style>. Aim at a golden seal within 60m to focus all waves. Without a living marked target, blades spread to nearby enemies. Finish with a heavenly sword for <style=cIsDamage>1800% damage</style> within 12m. Cooldown 24s.",

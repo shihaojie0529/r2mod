@@ -1,0 +1,16 @@
+PreviewProp 0 RiftRunnerDisplayMesh Hopoo Games/Deferred/Standard RiftRunnerPalette
+_SpecularStrength=0
+_Smoothness=0.08
+_EmPower=1
+PreviewProp 1 XiaoheiDisplayMesh Hopoo Games/Deferred/Standard XiaoheiPalette
+_SpecularStrength=0
+_Smoothness=0.12
+_EmPower=1.15
+PreviewProp 2 JieGeDisplayMesh Hopoo Games/Deferred/Standard JieGePalette
+_SpecularStrength=0
+_Smoothness=0.12
+_EmPower=1
+PreviewProp 3 WeiGeDisplayMesh Hopoo Games/Deferred/Standard WeiGeDisplay3
+_SpecularStrength=0
+_Smoothness=0.12
+_EmPower=1.4

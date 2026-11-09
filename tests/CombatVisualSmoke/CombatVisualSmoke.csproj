@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <GameManaged>$(GameDirectory)/Risk of Rain 2_Data/Managed</GameManaged>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/RiftSurvivor.csproj" />
+    <Compile Include="../../src/AssemblyInfo.cs" Link="AssemblyInfo.cs" />
+    <Reference Include="RoR2"><HintPath>$(GameManaged)/RoR2.dll</HintPath></Reference>
+    <Reference Include="UnityEngine"><HintPath>$(GameManaged)/UnityEngine.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(GameManaged)/UnityEngine.CoreModule.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.ImageConversionModule"><HintPath>$(GameManaged)/UnityEngine.ImageConversionModule.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.UI"><HintPath>$(GameManaged)/UnityEngine.UI.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.TextRenderingModule"><HintPath>$(GameManaged)/UnityEngine.TextRenderingModule.dll</HintPath></Reference>
+    <Reference Include="com.unity.multiplayer-hlapi.Runtime"><HintPath>$(GameManaged)/com.unity.multiplayer-hlapi.Runtime.dll</HintPath></Reference>
+    <Reference Include="BepInEx"><HintPath>$(BepInExDirectory)/core/BepInEx.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>

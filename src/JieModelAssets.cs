@@ -44,7 +44,7 @@ namespace RiftSurvivor
             var palette = new Texture2D(colors.Length, 1, TextureFormat.RGBA32, false)
                 { name = name, filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
             palette.SetPixels32(colors);
-            palette.Apply(false, true);
+            palette.Apply(false, false);
             return palette;
         }
 
@@ -86,9 +86,27 @@ namespace RiftSurvivor
                 foreach (var index in part.triangles) triangles.Add(start + index);
             }
             Material = new Material(shader) { name = name + "Cloth", mainTexture = Palette(name + "Palette", Colors) };
+            Texture2D accentLight = null;
+            if (name == "Xiaohei")
+            {
+                // Keep the pistol cell brighter than the shared ambient readability fill.
+                var lights = new Color32[Colors.Length];
+                for (int i = 0; i < Colors.Length; i++)
+                {
+                    var color = Colors[i];
+                    bool cell = sculpt.parts[i].bone == "RightHand" && color.g > 215 && color.b > 180 && color.r < 190;
+                    lights[i] = cell ? color : new Color32(0,0,0,255);
+                }
+                accentLight = Palette("XiaoheiPistolCell", lights);
+                if (Material.HasProperty("_EmTex")) Material.SetTexture("_EmTex", accentLight);
+                if (Material.HasProperty("_EmColor")) Material.SetColor("_EmColor", Color.white);
+                if (Material.HasProperty("_EmPower")) Material.SetFloat("_EmPower", 1.15f);
+            }
             if (Material.HasProperty("_Cull")) Material.SetFloat("_Cull", (float)CullMode.Off);
             if (Material.HasProperty("_Smoothness")) Material.SetFloat("_Smoothness", .12f);
             if (Material.HasProperty("_NormalStrength")) Material.SetFloat("_NormalStrength", 0f);
+            if (Material.HasProperty("_SpecularStrength")) Material.SetFloat("_SpecularStrength", 0f);
+            CombatVisuals.ApplyReadability(Material, accentLight, accentLight ? 1.15f : 0f);
             Mesh = new Mesh { name = name + "Skin",
                 indexFormat = verts.Count > 65535 ? IndexFormat.UInt32 : IndexFormat.UInt16 };
             Mesh.SetVertices(verts);

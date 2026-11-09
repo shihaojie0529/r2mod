@@ -24,6 +24,7 @@ namespace RiftSurvivor
 
         internal static void Install(GameObject prefab)
         {
+            OriginalModelGuard.Prepare(prefab);
             var model = prefab.GetComponentInChildren<CharacterModel>(true);
             var animator = prefab.GetComponentInChildren<Animator>(true);
             (model ? model.gameObject : animator ? animator.gameObject : prefab).AddComponent<WeiModel>();
@@ -37,6 +38,7 @@ namespace RiftSurvivor
             target = Array.Find(renderers, r => r.name == "CommandoMesh");
             if (!target && model) target = model.mainSkinnedMeshRenderer;
             if (!target && renderers.Length > 0) target = renderers[0];
+            LateUpdate();
         }
 
         private void LateUpdate()
@@ -69,7 +71,7 @@ namespace RiftSurvivor
             }
             float pulse = body ? WeiVitals.DoorPulse(body) : 0f;
             int stacks = body ? Mathf.Clamp(WeiVitals.Stacks(body), 0, 3) : 3;
-            var material = WatchMaterial(stacks, pulse > 0f);
+            var material = SurvivorDisplay.DisplayMaterial(WatchMaterial(stacks, pulse > 0f), body);
             if (target.sharedMesh != skin.Mesh || target.rootBone != rig.Root)
             {
                 target.bones = rig.OrderedBones;
@@ -85,6 +87,7 @@ namespace RiftSurvivor
             }
             else if (slot < 0 && target.sharedMaterial != material)
                 target.sharedMaterial = material;
+            OriginalModelGuard.Reveal(target);
             Pose(body ? Time.deltaTime : Time.unscaledDeltaTime, pulse);
         }
 
@@ -121,6 +124,7 @@ namespace RiftSurvivor
                 material.SetTexture("_EmissionMap", glow);
                 if (material.HasProperty("_EmissionColor")) material.SetColor("_EmissionColor", Color.white);
             }
+            CombatVisuals.ApplyReadability(material, glow, 1.4f);
             return WatchMaterials[index] = material;
         }
 

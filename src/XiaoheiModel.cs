@@ -25,6 +25,7 @@ namespace RiftSurvivor
 
         internal static void Install(GameObject prefab)
         {
+            OriginalModelGuard.Prepare(prefab);
             var characterModel = prefab.GetComponentInChildren<CharacterModel>(true);
             var animator = prefab.GetComponentInChildren<Animator>(true);
             (characterModel ? characterModel.gameObject : animator ? animator.gameObject : prefab)
@@ -39,6 +40,7 @@ namespace RiftSurvivor
             target = Array.Find(renderers, r => r.name == "CommandoMesh");
             if (!target && model) target = model.mainSkinnedMeshRenderer;
             if (!target && renderers.Length != 0) target = renderers[0];
+            LateUpdate();
         }
 
         private void LateUpdate()
@@ -71,21 +73,23 @@ namespace RiftSurvivor
                     return;
                 }
             }
+            var material = SurvivorDisplay.DisplayMaterial(cloth, body);
             if (target.sharedMesh != skin || target.rootBone != rig.Root)
             {
                 target.bones = rig.OrderedBones;
                 target.rootBone = rig.Root;
                 target.sharedMesh = skin;
-                target.sharedMaterial = cloth;
+                target.sharedMaterial = material;
                 target.localBounds = new Bounds(Vector3.up, new Vector3(2.4f, 2.6f, 2.5f));
             }
-            if (slot >= 0 && infos[slot].defaultMaterial != cloth)
+            if (slot >= 0 && infos[slot].defaultMaterial != material)
             {
-                infos[slot].defaultMaterial = cloth;
+                infos[slot].defaultMaterial = material;
                 model.materialsDirty = true;
             }
-            else if (slot < 0 && target.sharedMaterial != cloth)
-                target.sharedMaterial = cloth;
+            else if (slot < 0 && target.sharedMaterial != material)
+                target.sharedMaterial = material;
+            OriginalModelGuard.Reveal(target);
             Pose(body ? Time.deltaTime : Time.unscaledDeltaTime);
         }
 
@@ -171,6 +175,38 @@ namespace RiftSurvivor
             if (view) view.recoil = 1f;
         }
 
+        // The authored pose makes the large body and its barrel identical on all peers.
+        internal static Vector3 ReplayMuzzle(float height)
+        {
+            if (!skin) LoadSkin(CombatVisuals.TextureShader);
+            return (new Vector3(.246f, 1.381f, .609f) - Vector3.up * skin.bounds.min.y) * (height / skin.bounds.size.y);
+        }
+
+        internal static GameObject CreateReplayFigure(float height, float lifetime)
+        {
+            if (!skin) LoadSkin(CombatVisuals.TextureShader);
+            var mesh = Instantiate(skin); mesh.name = "XiaoheiGiantReplayPose";
+            var uv = mesh.uv;
+            var colors = new Color[mesh.vertexCount];
+            for (int i = 0; i < colors.Length; i++)
+            {
+                float light = echoPalette.GetPixel(Mathf.Clamp((int)(uv[i].x * echoPalette.width), 0, echoPalette.width - 1), 0).grayscale;
+                colors[i] = Color.Lerp(new Color(.28f,.38f,1.5f,.30f), new Color(.7f,1.8f,2.3f,.48f), light);
+            }
+            mesh.colors = colors;
+            if (!echoCloth) echoCloth = CombatVisuals.Radiance("XiaoheiSpectralEcho");
+            var figure = new GameObject("XiaoheiGiantReplayBody");
+            float scale = height / mesh.bounds.size.y;
+            figure.transform.localScale = Vector3.one * scale;
+            figure.transform.localPosition = Vector3.down * mesh.bounds.min.y * scale;
+            figure.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var renderer = figure.AddComponent<MeshRenderer>(); renderer.sharedMaterial = echoCloth;
+            renderer.shadowCastingMode = ShadowCastingMode.Off; renderer.receiveShadows = false;
+            var cleanup = figure.AddComponent<XiaoheiEchoMesh>(); cleanup.mesh = mesh; cleanup.enabled = false;
+            Destroy(figure, lifetime);
+            return figure;
+        }
+
         internal static GameObject CreateEcho(CharacterBody owner, Vector3 offset, float lifetime)
         {
             var view = Find(owner);
@@ -178,14 +214,17 @@ namespace RiftSurvivor
             var renderer = view.target;
             var mesh = new Mesh { name = "XiaoheiPoseSnapshot", indexFormat = skin.indexFormat };
             renderer.BakeMesh(mesh);
-            if (!echoCloth)
+            if (!echoCloth) echoCloth = CombatVisuals.Radiance("XiaoheiSpectralEcho");
+            // Preserve the authored silhouette and palette in an actually
+            // transparent material; Standard's alpha alone remained opaque.
+            var uv = mesh.uv;
+            var colors = new Color[mesh.vertexCount];
+            for (int i=0;i<colors.Length;i++)
             {
-                var shader = Shader.Find("Sprites/Default");
-                echoCloth = shader ? new Material(shader) : new Material(cloth);
-                echoCloth.name = "XiaoheiEcho";
-                echoCloth.mainTexture = echoPalette;
-                echoCloth.color = new Color(1f, 1f, 1f, .53f);
+                var pigment=echoPalette.GetPixel(Mathf.Clamp((int)(uv[i].x*echoPalette.width),0,echoPalette.width-1),0);
+                colors[i]=new Color(pigment.r,pigment.g,pigment.b,.22f);
             }
+            mesh.colors=colors;
             var echo = new GameObject("XiaoheiEcho");
             echo.transform.SetPositionAndRotation(renderer.transform.position + offset, renderer.transform.rotation);
             echo.transform.localScale = renderer.transform.lossyScale;
@@ -194,7 +233,8 @@ namespace RiftSurvivor
             display.sharedMaterial = echoCloth;
             display.shadowCastingMode = ShadowCastingMode.Off;
             display.receiveShadows = false;
-            echo.AddComponent<XiaoheiEchoMesh>().mesh = mesh;
+            var fading = echo.AddComponent<XiaoheiEchoMesh>();
+            fading.mesh = mesh; fading.Initialize(display, lifetime);
             Destroy(echo, lifetime);
             return echo;
         }
@@ -204,6 +244,20 @@ namespace RiftSurvivor
     public sealed class XiaoheiEchoMesh : MonoBehaviour
     {
         internal Mesh mesh;
+        private MeshRenderer view;
+        private float began, duration;
+        private readonly MaterialPropertyBlock fade = new MaterialPropertyBlock();
+        internal void Initialize(MeshRenderer renderer, float lifetime)
+        { view=renderer; began=Time.time; duration=lifetime; }
+        private void Update()
+        {
+            if(!view || duration<=0f)return;
+            float age=Time.time-began;
+            float alpha=Mathf.SmoothStep(0f,1f,age/.10f) *
+                Mathf.SmoothStep(0f,1f,(duration-age)/Mathf.Min(.28f,duration*.3f));
+            fade.SetColor("_TintColor",new Color(1f,1f,1f,alpha));
+            view.SetPropertyBlock(fade);
+        }
         private void OnDestroy() { if (mesh) Destroy(mesh); }
     }
 }

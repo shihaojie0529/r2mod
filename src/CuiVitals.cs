@@ -11,12 +11,16 @@ namespace RiftSurvivor
     {
         private const int MaxPump = 6;
         private static BuffDef pump, runnerHigh, chargeGuard, retainedGuard, castReceipt;
-        internal static BuffDef ShakerRecovery { get; private set; }
         private CharacterBody body;
         private CuiPumpMemory memory;
         private float regenTime, regenFraction;
         private int previousPump, lastReceipt;
         private bool trackingReceipts;
+        private float lastCombatAt = float.NegativeInfinity;
+        private float chargeBegan, chargeExited;
+        private bool chargePermit, windingUp;
+        internal const float ShieldPerPunch = .08f, ShieldPerUppercut = .12f;
+        internal const float ShieldCap = 2f, ShieldDecay = .02f, CombatGrace = 5f;
 
         internal static void Register()
         {
@@ -24,14 +28,22 @@ namespace RiftSurvivor
             runnerHigh = Buff("CuiPunchRecovery", "punch", new Color(.58f,.94f,.65f));
             chargeGuard = Buff("CuiChargeGuard", "charge", new Color(.39f,.75f,.93f));
             retainedGuard = Buff("CuiRetainedGuard", "slam", new Color(.94f,.74f,.39f));
-            ShakerRecovery = Buff("CuiShakerRecovery", "shaker", new Color(.38f,.88f,.77f));
             // Receipts travel with the vanilla reliable buff count. A remote player
             // pays stock only after the server verifies the target and accepts the cast.
             castReceipt = Buff("CuiShakerReceipt", "shaker", Color.white, true, true);
             ContentAddition.AddEntityState<ShakerAim>(out bool aim);
-            ContentAddition.AddEntityState<ShakerCast>(out bool cast);
-            if (!aim || !cast) throw new InvalidOperationException("Failed to register shaker states.");
+            if (!aim) throw new InvalidOperationException("Failed to register shaker states.");
             GlobalEventManager.onCharacterDeathServer += ClearPumpOnDeath;
+            On.RoR2.CharacterBody.RecalculateStats += (orig, owner) =>
+            {
+                orig(owner);
+                if (owner.GetComponent<CuiVitals>()) owner.maxBarrier = owner.maxHealth * ShieldCap;
+            };
+            On.RoR2.HealthComponent.GetBarrierDecayRate += (orig, health) =>
+            {
+                var vitals = health.body ? health.body.GetComponent<CuiVitals>() : null;
+                return vitals ? vitals.BarrierDecayRate() : orig(health);
+            };
         }
 
         private static BuffDef Buff(string name, string icon, Color color, bool stacks = false, bool hidden = false)
@@ -82,8 +94,11 @@ namespace RiftSurvivor
 
         internal static void PunchHit(CharacterBody source, bool third)
         {
-            if (GainPump(source) && third)
-                source.AddTimedBuff(runnerHigh, 4f, 1);
+            if (!GainPump(source)) return;
+            var vitals = source.GetComponent<CuiVitals>();
+            vitals.lastCombatAt = Time.fixedTime;
+            source.healthComponent.AddBarrier(source.healthComponent.fullHealth * (third ? ShieldPerUppercut : ShieldPerPunch));
+            if (third) source.AddTimedBuff(runnerHigh, 4f, 1);
         }
 
         internal static bool GainPump(CharacterBody source)
@@ -97,6 +112,8 @@ namespace RiftSurvivor
             if (vitals.memory) vitals.memory.count = count;
             return true;
         }
+
+        internal static int PumpCount(CharacterBody source) => source && pump ? source.GetBuffCount(pump) : 0;
 
         internal static bool IsFull(CharacterBody source) => source && source.GetBuffCount(pump) >= MaxPump;
 
@@ -118,8 +135,34 @@ namespace RiftSurvivor
                 source.SetBuffCount(chargeGuard.buffIndex, charging ? 1 : 0);
         }
 
+        internal float BarrierDecayRate() => body && body.healthComponent &&
+            Time.fixedTime - lastCombatAt >= CombatGrace && body.outOfCombat && body.outOfDanger
+                ? body.healthComponent.fullHealth * ShieldDecay : 0f;
+
+        internal void BeginCharge()
+        {
+            chargePermit = windingUp = true;
+            chargeBegan = Time.fixedTime;
+        }
+        internal void EndChargeWindup()
+        {
+            windingUp = false;
+            chargeExited = Time.fixedTime;
+        }
+        internal bool ReleaseCharge(float requested, out float seconds)
+        {
+            seconds = 0f;
+            if (!NetworkServer.active || !chargePermit || !body.healthComponent.alive ||
+                (!windingUp && Time.fixedTime - chargeExited > .25f) ||
+                Time.fixedTime - chargeBegan > CuiChargeWindup.MaxHold + 1f || float.IsNaN(requested) || float.IsInfinity(requested)) return false;
+            chargePermit = windingUp = false;
+            seconds = Mathf.Clamp(requested, 0f, Mathf.Min(CuiChargeWindup.MaxHold,Time.fixedTime-chargeBegan+.10f));
+            return true;
+        }
+
         public void OnIncomingDamageServer(DamageInfo damageInfo)
         {
+            if (!damageInfo.rejected && damageInfo.damage > 0f) lastCombatAt = Time.fixedTime;
             float pumpReduction = body.HasBuff(retainedGuard) ? .30f : .05f * body.GetBuffCount(pump);
             damageInfo.damage *= (1f - pumpReduction) * (body.HasBuff(chargeGuard) ? .4f : 1f);
         }
@@ -160,6 +203,8 @@ namespace RiftSurvivor
             }
 
             RestorePump();
+            if (body.healthComponent.barrier > body.healthComponent.fullBarrier)
+                body.healthComponent.Networkbarrier = body.healthComponent.fullBarrier;
             regenTime += Time.fixedDeltaTime;
             regenFraction += Time.fixedDeltaTime * (body.HasBuff(runnerHigh) ? .04f : .02f);
             if (regenTime >= .25f)
@@ -173,43 +218,4 @@ namespace RiftSurvivor
     // The master survives stage transitions. An actual death resets its saved count.
     internal sealed class CuiPumpMemory : MonoBehaviour { internal int count; }
 
-    internal sealed class CuiShakerHealing : MonoBehaviour
-    {
-        private CharacterBody recipient;
-        private int ticks;
-        private float nextTick, fraction, endsAt;
-
-        internal static void Serve(CharacterBody target, bool empowered)
-        {
-            var effect = target.GetComponent<CuiShakerHealing>();
-            if (!effect) effect = target.gameObject.AddComponent<CuiShakerHealing>();
-            effect.recipient = target;
-            effect.fraction = empowered ? .10f : .06f;
-            effect.nextTick = Time.fixedTime;
-            effect.endsAt = Time.fixedTime + 8f;
-            effect.ticks = 8;
-            target.AddTimedBuff(CuiVitals.ShakerRecovery, 8f, 1);
-            // A new cup replaces the remaining course and pays its first sip on receipt.
-            effect.HealIfDue();
-        }
-
-        private void FixedUpdate()
-        {
-            if (!NetworkServer.active || !recipient || !recipient.healthComponent.alive || Time.fixedTime >= endsAt)
-            {
-                enabled = false;
-                return;
-            }
-            HealIfDue();
-        }
-
-        private void HealIfDue()
-        {
-            enabled = true;
-            if (ticks <= 0 || Time.fixedTime < nextTick) return;
-            ticks--;
-            nextTick += 1f;
-            recipient.healthComponent.Heal(recipient.healthComponent.fullHealth * fraction, default, true);
-        }
-    }
 }

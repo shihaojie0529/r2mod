@@ -149,6 +149,8 @@ namespace RiftSurvivor
         protected override void ImpactServer()
         {
             bool third = step == 2;
+            SkillSpectacle.Emit(third ? SpectacleKind.Uppercut : SpectacleKind.Punch,
+                characterBody.corePosition + Aim * .85f, Aim, third ? 1.8f : 1.3f);
             if (MeleeCombat.Sweep(characterBody, characterBody.corePosition, Aim,
                 third ? 3.3f : 3f, third ? 1.25f : 1.05f, third ? 3f : 1.6f, third ? 560f : 120f,
                 DamageTypeCombo.GenericPrimary, RollCrit(), new HashSet<HealthComponent>()))
@@ -192,7 +194,14 @@ namespace RiftSurvivor
 
     public sealed class ShoulderCharge : AimedMeleeState
     {
-        private const float Duration = 0.48f;
+        private const float BaseDuration = .48f, MaxDuration = 1.25f;
+        internal float heldSeconds;
+        internal static float DamageCoefficient(float seconds) => Mathf.Lerp(3.5f,14f,Mathf.Clamp01(seconds / CuiChargeWindup.MaxHold));
+        internal const float LockRange = 30f, LockAngle = 25f;
+        private float duration = BaseDuration;
+        private HurtBox target;
+        private HurtBoxReference targetReference;
+        private Vector3 chargeDirection;
         private readonly HashSet<HealthComponent> victims = new HashSet<HealthComponent>();
         private Vector3 previousCore;
         private float speed;
@@ -206,19 +215,40 @@ namespace RiftSurvivor
         public override void OnEnter()
         {
             base.OnEnter();
-            if (!AcceptSlot(skillLocator ? skillLocator.utility : null, true))
+            var vitals = characterBody ? characterBody.GetComponent<CuiVitals>() : null;
+            var slot = skillLocator ? skillLocator.utility : null;
+            bool accepted = vitals && slot && slot.stateMachine == outer &&
+                slot.activationState.stateType == typeof(CuiChargeWindup) && healthComponent.alive;
+            if (NetworkServer.active && accepted) accepted = vitals.ReleaseCharge(heldSeconds,out heldSeconds);
+            if (!accepted)
             {
                 stopped = true;
                 if (isAuthority) outer.SetNextStateToMain();
                 return;
             }
             speed = Mathf.Max(4f, moveSpeedStat * 3.6f);
+            chargeDirection = Aim;
+            var aim = new Ray(characterBody.aimOrigin, Aim);
+            if (isAuthority) target = FindTarget(characterBody, aim, Mathf.Min(LockRange, speed * MaxDuration));
+            else
+            {
+                target = targetReference.rootObject ? targetReference.ResolveHurtBox() : null;
+                if (!ValidTarget(characterBody, aim, target, Mathf.Min(LockRange, speed * MaxDuration), 5f)) target = null;
+            }
+            targetReference = target ? HurtBoxReference.FromHurtBox(target) : default;
+            if (target)
+            {
+                var delta = TargetPoint(target, characterBody.corePosition) - characterBody.corePosition;
+                if (delta.sqrMagnitude > .0001f) chargeDirection = delta.normalized;
+                duration = Mathf.Clamp((delta.magnitude + 1f) / speed, BaseDuration, MaxDuration);
+            }
             previousCore = characterBody.corePosition;
-            StartAimMode(Duration);
-            CuiMotion.Play(characterBody, "charge", Duration);
+            if (NetworkServer.active) SkillSpectacle.Emit(SpectacleKind.Slam,previousCore,chargeDirection,Mathf.Lerp(1.2f,3f,heldSeconds / CuiChargeWindup.MaxHold));
+            StartAimMode(duration);
+            CuiMotion.Play(characterBody, "charge", duration);
             if (isAuthority && characterMotor)
             {
-                if (Aim.y > 0.1f) characterMotor.Motor.ForceUnground();
+                if (chargeDirection.y > 0.1f) characterMotor.Motor.ForceUnground();
                 characterMotor.velocity = Vector3.zero;
             }
             if (NetworkServer.active)
@@ -232,8 +262,48 @@ namespace RiftSurvivor
             }
         }
 
+        private static Vector3 TargetPoint(HurtBox hurt, Vector3 origin) =>
+            hurt.collider ? hurt.collider.ClosestPoint(origin) : hurt.transform.position;
+
+        internal static bool ValidTarget(CharacterBody caster, Ray aim, HurtBox hurt, float range, float angleTolerance = 0f)
+        {
+            if (!JieStorm.CanSee(caster, hurt)) return false;
+            var point = TargetPoint(hurt, aim.origin);
+            var delta = point - aim.origin;
+            return delta.sqrMagnitude <= range * range &&
+                Vector3.Angle(aim.direction, delta) <= LockAngle + angleTolerance &&
+                !Physics.Linecast(aim.origin, point, LayerIndex.world.mask, QueryTriggerInteraction.Ignore);
+        }
+
+        internal static HurtBox FindTarget(CharacterBody caster, Ray aim, float range)
+        {
+            var search = new BullseyeSearch
+            {
+                viewer = caster, teamMaskFilter = TeamMask.GetEnemyTeams(caster.teamComponent.teamIndex),
+                searchOrigin = aim.origin, searchDirection = aim.direction, maxDistanceFilter = range,
+                maxAngleFilter = LockAngle, filterByLoS = true, sortMode = BullseyeSearch.SortMode.Angle
+            };
+            search.RefreshCandidates();
+            foreach (var hurt in search.GetResults()) if (ValidTarget(caster, aim, hurt, range)) return hurt;
+            return null;
+        }
+
+        public override void OnSerialize(NetworkWriter writer)
+        {
+            base.OnSerialize(writer);
+            targetReference.Write(writer);
+            writer.Write(heldSeconds);
+        }
+
+        public override void OnDeserialize(NetworkReader reader)
+        {
+            base.OnDeserialize(reader);
+            targetReference.Read(reader);
+            heldSeconds = Mathf.Clamp(reader.ReadSingle(),0f,CuiChargeWindup.MaxHold);
+        }
+
         private bool WallAhead() => Physics.SphereCast(characterBody.corePosition, characterBody.radius * .65f,
-            Aim, out _, characterBody.radius * .35f + speed * Time.fixedDeltaTime,
+            chargeDirection, out _, characterBody.radius * .35f + speed * Time.fixedDeltaTime,
             LayerIndex.world.mask, QueryTriggerInteraction.Ignore);
 
         internal static void BeforePortalWarp(CharacterBody traveler, Vector3 destinationRoot)
@@ -259,7 +329,7 @@ namespace RiftSurvivor
             var travelled = current - previousCore;
             float distance = travelled.magnitude;
             float nextDistance = travelledDistance + distance;
-            bool withinDash = nextDistance <= speed * Duration + 1f && Vector3.Dot(travelled, Aim) >= -.15f;
+            bool withinDash = nextDistance <= speed * duration + 1f && Vector3.Dot(travelled, chargeDirection) >= -.15f;
             if (lastExitSampleAt >= 0f && distance > .0001f)
             {
                 // The guest can still send entrance positions before it receives the warp.
@@ -274,9 +344,9 @@ namespace RiftSurvivor
             travelledDistance = nextDistance;
             if (withinDash && !Physics.Linecast(previousCore, current, LayerIndex.world.mask, QueryTriggerInteraction.Ignore))
             {
-                var direction = travelled.sqrMagnitude > 0.0001f ? travelled.normalized : Aim;
+                var direction = travelled.sqrMagnitude > 0.0001f ? travelled.normalized : chargeDirection;
                 MeleeCombat.Sweep(characterBody, previousCore, direction, distance + 0.95f,
-                    1.1f, 3.5f, 1000f, DamageTypeCombo.GenericUtility, crit, victims, triggerCover: true);
+                    1.1f, DamageCoefficient(heldSeconds), Mathf.Lerp(1000f,2200f,heldSeconds / CuiChargeWindup.MaxHold), DamageTypeCombo.GenericUtility, crit, victims, triggerCover: true, resetOnKill: true);
             }
             previousCore = current;
             return true;
@@ -293,8 +363,18 @@ namespace RiftSurvivor
         {
             base.FixedUpdate();
             if (stopped) return;
+            if (JieStorm.CanSee(characterBody, target))
+            {
+                var delta = TargetPoint(target, characterBody.corePosition) - characterBody.corePosition;
+                if (!Physics.Linecast(characterBody.corePosition, TargetPoint(target, characterBody.corePosition),
+                    LayerIndex.world.mask, QueryTriggerInteraction.Ignore) && delta.sqrMagnitude > .0001f)
+                    chargeDirection = Vector3.RotateTowards(chargeDirection, delta.normalized, 10f * Time.fixedDeltaTime, 0f).normalized;
+                else if (delta.sqrMagnitude > .0001f) target = null;
+            }
+            else target = null;
             bool validPosition = !NetworkServer.active || !guarding || SweepTravel();
-            if (!characterMotor || fixedAge >= Duration || (validPosition && WallAhead()))
+            if (!characterMotor || fixedAge >= duration || (validPosition && WallAhead()) ||
+                (target && (TargetPoint(target, characterBody.corePosition) - characterBody.corePosition).sqrMagnitude < .04f))
             {
                 stopped = true;
                 EndGuard();
@@ -306,7 +386,10 @@ namespace RiftSurvivor
             {
                 characterMotor.moveDirection = Vector3.zero;
                 characterMotor.velocity = Vector3.zero;
-                characterMotor.rootMotion += Aim * (speed * Time.fixedDeltaTime);
+                float step = speed * Time.fixedDeltaTime;
+                if (target) step = Mathf.Min(step, Vector3.Distance(characterBody.corePosition, TargetPoint(target, characterBody.corePosition)));
+                if (chargeDirection.y > .1f) characterMotor.Motor.ForceUnground();
+                characterMotor.rootMotion += chargeDirection * step;
             }
         }
 

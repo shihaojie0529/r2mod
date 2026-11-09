@@ -6,7 +6,7 @@ using R2API.Utils;
 
 namespace RiftSurvivor
 {
-    [BepInPlugin("local.r2mod.riftsurvivor", "小黑大哥合集", "0.5.3")]
+    [BepInPlugin("local.r2mod.riftsurvivor", "小黑大哥合集", "0.5.17")]
     [BepInDependency(R2APIContentManager.PluginGUID)]
     [BepInDependency(PrefabAPI.PluginGUID)]
     [BepInDependency(LanguageAPI.PluginGUID)]
@@ -24,6 +24,8 @@ namespace RiftSurvivor
 
         private void Awake()
         {
+            SkillSpectacle.Register();
+            DirectSkillKillReset.Register();
             int registered = 0;
             foreach (var member in Roster)
             {
@@ -37,6 +39,8 @@ namespace RiftSurvivor
                     Logger.LogError($"{member.Name} 注册失败 ({Info.Metadata.Version}): {error}");
                 }
             }
+            CombatVisuals.Initialize();
+            CombatStatusHud.Register();
             HiddenFlight.Register();
             Logger.LogInfo($"{Info.Metadata.Name} {Info.Metadata.Version}: 已注册 {registered}/{Roster.Length} 位角色。");
         }

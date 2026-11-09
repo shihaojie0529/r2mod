@@ -23,14 +23,14 @@ namespace RiftSurvivor
             character.portraitIcon = JieModel.Portrait;
             SurvivorContent.ConfigureRangedStats(character, 100f, 30f, 7f);
             JieSwords.Install(body);
+            body.AddComponent<DirectSkillKillReset>();
             JieFlight.Install(body);
             SurvivorSkills.AddIdleMachine(body, "Storm");
             ConfigureSkills(body.GetComponent<SkillLocator>());
             JieModel.Install(body);
 
             var master = PrefabAPI.InstantiateClone(SurvivorContent.LoadPrefab("CommandoMonsterMaster"), "JieGeMonsterMaster", true);
-            var display = PrefabAPI.InstantiateClone(SurvivorContent.LoadPrefab("CommandoDisplay"), "JieGeDisplay", false);
-            JieModel.Install(display);
+            var display = SurvivorDisplay.Create("JieGeDisplay", JieModel.Install);
             SurvivorContent.RegisterRangedSurvivor("JieGe", "JIEGE", 102f, character, master, display);
         }
 
@@ -44,7 +44,7 @@ namespace RiftSurvivor
             Add<JieDrawSword>(slots.primary, "DRAW", "jie-draw", "Weapon", 0f, 0, InterruptPriority.Any);
             Add<JieRecallSwords>(slots.secondary, "RECALL", "jie-recall-0", "Weapon", 4f, 0, InterruptPriority.Skill,
                 ScriptableObject.CreateInstance<JieRecallSkillDef>());
-            Add<JieDash>(slots.utility, "DASH", "jie-dash", "Slide", 6f, 1, InterruptPriority.Skill);
+            Add<JieDash>(slots.utility, "DASH", "jie-dash", "Slide", 2f, 1, InterruptPriority.Skill);
             Add<JieStorm>(slots.special, "STORM", "jie-storm", "Storm", 24f, 1, InterruptPriority.Skill,
                 ScriptableObject.CreateInstance<JieStormSkillDef>());
         }

@@ -21,9 +21,9 @@ namespace RiftSurvivor
                 "每在地面行走或衝刺 20 公尺，手錶就攢 1 層燃脂，最多 3 層。成功開門記 1 步。左鍵或右鍵成功投出時自動消耗 1 層，傷害<style=cIsDamage>提高 25%</style>。");
             Add("WEIGE_DELIVERY_NAME", "Furniture Delivery", "家具快送", "家具快送");
             Add("WEIGE_DELIVERY_DESC",
-                "Automatically lock a visible enemy in any direction within 60m and throw furniture for <style=cIsDamage>320% damage</style> (400% with Fat Burn), even while flying. Hold primary for manual aim. Grounded furniture remains for 6s.",
-                "自动锁定周身 60 米内的可见敌人，持续投出家具。每件直击<style=cIsDamage>320% 伤害</style>，消耗燃脂时为 400%。飞行中也会自动攻击，按住左键可改按准星投掷。落地家具保留 6 秒。",
-                "自動鎖定周身 60 公尺內的可見敵人，持續投出家具。每件直擊<style=cIsDamage>320% 傷害</style>，消耗燃脂時為 400%。飛行中也會自動攻擊，按住左鍵可改按準星投擲。落地家具保留 6 秒。");
+                "Auto-target visible enemies within 60m. Cycle chair, sofa, table, fridge, lamp and wardrobe. Base damage 320% (400% with Fat Burn). Chair: interrupt; sofa: 4m shockwave; table: 3s bleed; fridge: 2s slow; lamp: chain to 2 enemies; wardrobe: 1.5x damage and stun. Grounded furniture remains 6s. Hold primary to aim manually.",
+                "自动锁定周身 60 米可见敌人，轮流投出椅子、沙发、餐桌、冰箱、落地灯和衣柜。基础伤害 320%（燃脂 400%）。椅子打断；沙发震荡 4 米；餐桌流血 3 秒；冰箱减速 2 秒；灯电击另两敌；衣柜 1.5 倍重击并眩晕。落地保留 6 秒，按住左键手动瞄准。",
+                "自動鎖定周身 60 公尺可見敵人，輪流投出椅子、沙發、餐桌、冰箱、落地燈和衣櫃。基礎傷害 320%（燃脂 400%）。椅子打斷；沙發震盪 4 公尺；餐桌流血 3 秒；冰箱減速 2 秒；燈電擊另兩敵；衣櫃 1.5 倍重擊並暈眩。落地保留 6 秒，按住左鍵手動瞄準。");
             Add("WEIGE_CUT_NAME", "Cut / Paste", "剪切 / 粘贴", "剪下 / 貼上");
             Add("WEIGE_CUT_DESC",
                 "Tap to throw the nearest visible non-boss enemy within 25m. Hold to carry it, even through a door, then release to throw. The payload and its victim each take <style=cIsDamage>600% damage</style> (750% with Fat Burn). Cooldown 5s on a successful throw.",
@@ -36,9 +36,9 @@ namespace RiftSurvivor
                 "沿準星移動最多 20 公尺，遇牆停在牆前。起點與出口在 3 秒內雙向互通，隊友、家具和拋出的小怪也能穿門。冷卻 7 秒。");
             Add("WEIGE_SELECT_NAME", "Select All", "全选", "全選");
             Add("WEIGE_SELECT_DESC",
-                "Select up to 6 visible small enemies or grounded furniture near the reticle within 40m and throw them together. Each piece of furniture deals <style=cIsDamage>400% damage</style>. Thrown enemies deal 600% on impact. Keeps Fat Burn. Cooldown 18s on a successful throw.",
-                "框起准星附近 40 米内的普通怪和落地家具，最多 6 个，一起投出。每件家具<style=cIsDamage>400% 伤害</style>，每只怪按 600% 碰撞结算。保留燃脂，成功投出后冷却 18 秒。",
-                "框起準星附近 40 公尺內的普通怪和落地家具，最多 6 個，一起投出。每件家具<style=cIsDamage>400% 傷害</style>，每隻怪按 600% 碰撞結算。保留燃脂，成功投出後冷卻 18 秒。");
+                "Select up to 6 visible small enemies or grounded furniture near the reticle within 40m and throw them together. Furniture deals <style=cIsDamage>400% base damage</style>, modified by its type and keeping its special effect. Thrown enemies deal 600% on impact. Keeps Fat Burn. Cooldown 18s on a successful throw.",
+                "框起准星附近 40 米内的普通怪和落地家具，最多 6 个，一起投出。每件家具以<style=cIsDamage>400% 基础伤害</style>乘自身倍率，并保留专属效果，每只怪按 600% 碰撞结算。保留燃脂，成功投出后冷却 18 秒。",
+                "框起準星附近 40 公尺內的普通怪和落地家具，最多 6 個，一起投出。每件家具以<style=cIsDamage>400% 基礎傷害</style>乘自身倍率，並保留專屬效果，每隻怪按 600% 碰撞結算。保留燃脂，成功投出後冷卻 18 秒。");
             Add("WEIGE_DOOR_STEP", "Today's steps +1", "今日步数 +1", "今日步數 +1");
             Add("WEIGE_FLIGHT_ON", "Flight enabled", "准星飞行已开启", "準星飛行已開啟");
             Add("WEIGE_FLIGHT_OFF", "Flight disabled", "准星飞行已关闭", "準星飛行已關閉");

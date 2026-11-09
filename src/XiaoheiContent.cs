@@ -23,12 +23,12 @@ namespace RiftSurvivor
             SurvivorContent.ConfigureRangedStats(character, 110f, 33f, 7.5f);
             body.AddComponent<XiaoheiBlink>();
             XiaoheiCombat.Install(body);
+            body.AddComponent<DirectSkillKillReset>();
             ConfigureSkills(body);
             XiaoheiModel.Install(body);
 
             var master = PrefabAPI.InstantiateClone(SurvivorContent.LoadPrefab("CommandoMonsterMaster"), "XiaoheiMonsterMaster", true);
-            var display = PrefabAPI.InstantiateClone(SurvivorContent.LoadPrefab("CommandoDisplay"), "XiaoheiDisplay", false);
-            XiaoheiModel.Install(display);
+            var display = SurvivorDisplay.Create("XiaoheiDisplay", XiaoheiModel.Install);
             SurvivorContent.RegisterRangedSurvivor("Xiaohei", "XIAOHEI", 101f, character, master, display);
         }
 

@@ -46,7 +46,7 @@ namespace RiftSurvivor
         // Use native bullet processing for falloff, weak points, collision and
         // item procs. The tracer starts at the visible gun, the ray at the reticle.
         internal static (bool landed, HealthComponent victim, Vector3 point) Fire(CharacterBody body,
-            Ray ray, Vector3 muzzle, float coefficient, DamageTypeCombo type, GameObject tracer, bool personalShot = false)
+            Ray ray, Vector3 muzzle, float coefficient, DamageTypeCombo type, GameObject tracer, bool personalShot = false, bool resetSecondary = false)
         {
             var attack = new BulletAttack
             {
@@ -57,6 +57,13 @@ namespace RiftSurvivor
                 smartCollision = true, queryTriggerInteraction = QueryTriggerInteraction.Collide,
                 hitEffectPrefab = XiaoheiCombat.Impact
             };
+            DamageInfo directHit = null;
+            if (resetSecondary)
+                attack.modifyOutgoingDamageCallback = (BulletAttack shot, ref BulletAttack.BulletHit contact, DamageInfo info) =>
+                {
+                    directHit = info;
+                    DirectSkillKillReset.Track(info, body);
+                };
             HealthComponent victim = null;
             Vector3 hitPoint = default;
             bool hitEnemy = false;
@@ -69,7 +76,9 @@ namespace RiftSurvivor
                 bool enemy = IsLiveEnemy(body, hurt);
                 // Count a live enemy contact even if armor or immunity absorbs
                 // the shot. Let vanilla resolve its damage, props and world stops.
-                bool keepGoing = native(shot, ref contact);
+                bool keepGoing;
+                try { keepGoing = native(shot, ref contact); }
+                finally { DirectSkillKillReset.Forget(directHit); directHit = null; }
                 if (enemy || !keepGoing) end = contact.point;
                 if (enemy)
                 {
@@ -86,7 +95,7 @@ namespace RiftSurvivor
         }
 
         internal static void HitTarget(CharacterBody shooter, HealthComponent health, HurtBox hurt,
-            float damage, bool crit, DamageTypeCombo type)
+            float damage, bool crit, DamageTypeCombo type, bool resetSecondary = false)
         {
             var info = new DamageInfo
             {
@@ -96,7 +105,9 @@ namespace RiftSurvivor
             };
             if (hurt) info.ModifyDamageInfo(hurt.damageModifier);
             var victim = health.gameObject;
-            health.TakeDamage(info);
+            if (resetSecondary) DirectSkillKillReset.Track(info, shooter);
+            try { health.TakeDamage(info); }
+            finally { DirectSkillKillReset.Forget(info); }
             if (info.rejected) return;
             GlobalEventManager.instance.OnHitEnemy(info, victim);
             GlobalEventManager.instance.OnHitAll(info, victim);
@@ -127,7 +138,7 @@ namespace RiftSurvivor
             // Some shootable enemies have no search bullseye. An unlocked round
             // still travels straight and can earn its mark on an actual impact.
             var result = Fire(body, aim, muzzle, 5.5f, DamageTypeCombo.GenericSecondary, XiaoheiCombat.SeekerEffect,
-                personalShot: true);
+                personalShot: true, resetSecondary: true);
             combat.SeekerResult(result.victim, result.landed, miss, afterCup, result.point);
         }
     }
@@ -157,8 +168,9 @@ namespace RiftSurvivor
             Vector3 point = hit ? target.transform.position : origin;
             if (hit)
             {
-                XiaoheiBallistics.HitTarget(shooter, health, target, damage, crit, DamageTypeCombo.GenericSecondary);
+                XiaoheiBallistics.HitTarget(shooter, health, target, damage, crit, DamageTypeCombo.GenericSecondary, resetSecondary: true);
                 WeiBonds.TryCatch(shooter, health, point);
+                SkillSpectacle.Emit(SpectacleKind.Seeker,point,Vector3.up,1.9f);
             }
             combat.SeekerResult(health, hit, miss, afterCup, point);
         }
@@ -181,6 +193,8 @@ namespace RiftSurvivor
             origin = muzzle;
             initialAim = aim;
             total = 6 + 2 * highlights;
+            CombatStatusHud.Replay(shooter);
+            SkillSpectacle.Emit(SpectacleKind.Replay,muzzle,aim.direction,2.5f);
             began = Time.fixedTimeAsDouble;
             Fire(initialAim);
         }

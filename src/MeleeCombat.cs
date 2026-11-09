@@ -26,7 +26,7 @@ namespace RiftSurvivor
         // A charge reuses its hit set between casts; a punch gets a fresh set.
         internal static bool Sweep(CharacterBody body, Vector3 origin, Vector3 direction,
             float reach, float radius, float coefficient, float force, DamageTypeCombo type,
-            bool crit, HashSet<HealthComponent> touched, bool triggerCover = false)
+            bool crit, HashSet<HealthComponent> touched, bool triggerCover = false, bool resetOnKill = false)
         {
             var attack = new BulletAttack
             {
@@ -37,13 +37,24 @@ namespace RiftSurvivor
                 smartCollision = false, stopperMask = LayerIndex.world.mask,
                 hitEffectPrefab = fistImpact
             };
+            DamageInfo directHit = null;
+            if (resetOnKill)
+                attack.modifyOutgoingDamageCallback = (BulletAttack shot, ref BulletAttack.BulletHit hit, DamageInfo info) =>
+                {
+                    directHit = info;
+                    DirectSkillKillReset.Track(info, body);
+                };
             bool landed = false;
             List<HealthComponent> coverTargets = null;
             var nativeHit = attack.hitCallback ?? BulletAttack.defaultHitCallback;
             attack.hitCallback = (BulletAttack shot, ref BulletAttack.BulletHit hit) =>
             {
                 var hurtBox = hit.hitHurtBox ? hit.hitHurtBox : hit.hurtBox;
-                if (!hurtBox) return nativeHit(shot, ref hit); // World geometry can stop the cast.
+                if (!hurtBox)
+                {
+                    try { return nativeHit(shot, ref hit); } // World geometry can stop the cast.
+                    finally { DirectSkillKillReset.Forget(directHit); directHit = null; }
+                }
                 var health = hurtBox.healthComponent;
                 var contact = hit.distance > 0f ? hit.point : origin;
                 if (!health || !health.alive || health == body.healthComponent ||
@@ -55,7 +66,9 @@ namespace RiftSurvivor
 
                 float before = health.combinedHealth + health.barrier;
                 if (!triggerCover) WeiBonds.DirectHit(body, health, contact, DinnerStrike.Cui);
-                bool keepGoing = nativeHit(shot, ref hit);
+                bool keepGoing;
+                try { keepGoing = nativeHit(shot, ref hit); }
+                finally { DirectSkillKillReset.Forget(directHit); directHit = null; }
                 landed |= !health || !health.alive || health.combinedHealth + health.barrier < before;
                 if (triggerCover && health)
                     (coverTargets ??= new List<HealthComponent>()).Add(health);
@@ -72,6 +85,7 @@ namespace RiftSurvivor
         internal static void Slam(CharacterBody body, bool heavy, bool crit)
         {
             float radius = heavy ? 8f : 6f;
+            SkillSpectacle.Emit(SpectacleKind.Slam, body.footPosition, Vector3.up, radius);
             var result = new BlastAttack
             {
                 attacker = body.gameObject, inflictor = body.gameObject, teamIndex = body.teamComponent.teamIndex,

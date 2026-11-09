@@ -12,7 +12,8 @@ namespace RiftSurvivor
     public sealed class WeiThrowActor : NetworkBehaviour
     {
         private enum Mode : byte { Held, Flying, Falling, Grounded, Reserved, Done }
-        private enum Cargo : byte { Chair, Sofa, Enemy }
+        private enum Cargo : byte { Chair, Sofa, Enemy, Table, Fridge, Lamp, Wardrobe }
+        private FurnitureKind Furniture => cargo == Cargo.Sofa ? FurnitureKind.Sofa : cargo == Cargo.Table ? FurnitureKind.Table : cargo == Cargo.Fridge ? FurnitureKind.Fridge : cargo == Cargo.Lamp ? FurnitureKind.Lamp : cargo == Cargo.Wardrobe ? FurnitureKind.Wardrobe : FurnitureKind.Chair;
         private static GameObject prefab;
         private static readonly List<WeiThrowActor> actors = new List<WeiThrowActor>();
         private static readonly List<WeiThrowActor> onGround = new List<WeiThrowActor>();
@@ -87,8 +88,14 @@ namespace RiftSurvivor
 
         internal static WeiThrowActor MakeFurniture(CharacterBody caster, Vector3 point, bool sofa)
         {
-            var actor = Make(caster, point, sofa ? Cargo.Sofa : Cargo.Chair);
-            actor.radius = sofa ? .48f : .30f;
+            return MakeFurnitureKind(caster, point, sofa ? FurnitureKind.Sofa : FurnitureKind.Chair);
+        }
+
+        internal static WeiThrowActor MakeFurnitureKind(CharacterBody caster, Vector3 point, FurnitureKind kind)
+        {
+            var cargo = kind == FurnitureKind.Chair ? Cargo.Chair : kind == FurnitureKind.Sofa ? Cargo.Sofa : kind == FurnitureKind.Table ? Cargo.Table : kind == FurnitureKind.Fridge ? Cargo.Fridge : kind == FurnitureKind.Lamp ? Cargo.Lamp : Cargo.Wardrobe;
+            var actor = Make(caster, point, cargo);
+            actor.radius = FurnitureCatalog.Radius(kind);
             actor.Spawn();
             return actor;
         }
@@ -206,7 +213,7 @@ namespace RiftSurvivor
             owner = caster;
             ownerId = caster.netId;
             ownerTeam = caster.teamComponent.teamIndex;
-            damage = caster.damage * coefficient;
+            damage = caster.damage * coefficient * (cargo == Cargo.Enemy ? 1f : FurnitureCatalog.Multiplier(Furniture));
             damageType = type;
             crit = caster.RollCrit();
             target = slam || aim.door ? null : aim.target;
@@ -333,6 +340,7 @@ namespace RiftSurvivor
             var struck = impact.hurt;
             if (passenger) RestorePassenger();
             if (struck) Direct(struck.healthComponent, struck, impact.point);
+            if (cargo != Cargo.Enemy) FurnitureCatalog.Burst(owner, struck ? struck.healthComponent : null, impact.point, damage, crit, Furniture);
             if (victim && victim.alive) Direct(victim, passenger.mainHurtBox, transform.position);
             if (cargo == Cargo.Enemy) { NetworkServer.Destroy(gameObject); return; }
             if (!struck && impact.normal.y > .48f) Rest(impact.point);
@@ -344,6 +352,7 @@ namespace RiftSurvivor
             if (!victim || !victim.alive) return;
             WeiBonds.OnThrowHit(owner, victim, point, heading, cargo != Cargo.Enemy);
             XiaoheiBallistics.HitTarget(owner, victim, hurt, damage, crit, damageType);
+            if (cargo != Cargo.Enemy) FurnitureCatalog.Status(owner, victim, Furniture);
         }
 
         internal static bool TryIntercept(CharacterBody shooter, HealthComponent victim, Vector3 point)
@@ -383,7 +392,7 @@ namespace RiftSurvivor
             if (Time.fixedTime >= ends) { Cancel(); return; }
             fallSpeed = Mathf.Min(35f, fallSpeed + 19.6f * Time.fixedDeltaTime);
             float dy = fallSpeed * Time.fixedDeltaTime;
-            float halfHeight = cargo == Cargo.Sofa ? .44f : .49f;
+            float halfHeight = FurnitureCatalog.HalfHeight(Furniture);
             var from = transform.position + Vector3.up * .20f;
             if (Physics.Raycast(from, Vector3.down, out var floor, dy + halfHeight + .20f,
                 LayerIndex.world.mask, QueryTriggerInteraction.Ignore)) Rest(floor.point);
@@ -400,7 +409,7 @@ namespace RiftSurvivor
         private void Rest(Vector3 floor)
         {
             LevelFurniture();
-            transform.position = floor + Vector3.up * (cargo == Cargo.Sofa ? .44f : .49f);
+            transform.position = floor + Vector3.up * (FurnitureCatalog.HalfHeight(Furniture));
             mode = Mode.Grounded;
             ends = Time.fixedTime + 6f;
             onGround.Add(this);
@@ -422,6 +431,7 @@ namespace RiftSurvivor
         {
             writer.Write((byte)mode); writer.Write((byte)cargo); writer.Write(ownerId); writer.Write(mobId);
             writer.Write(transform.position); writer.Write(transform.rotation);
+            writer.Write(batch);
             writer.Write(Mathf.Clamp(flashUntil - Time.time, 0f, .36f));
             return true;
         }
@@ -431,6 +441,7 @@ namespace RiftSurvivor
             mode = (Mode)reader.ReadByte(); cargo = (Cargo)reader.ReadByte();
             ownerId = reader.ReadNetworkId(); mobId = reader.ReadNetworkId();
             fromSample = transform.position; lastSample = reader.ReadVector3(); transform.rotation = reader.ReadQuaternion();
+            batch = reader.ReadUInt32();
             flashUntil = Time.time + reader.ReadSingle();
             if (initialState || previous != mode || mode == Mode.Grounded || (fromSample - lastSample).sqrMagnitude > 16f)
             {
@@ -447,10 +458,23 @@ namespace RiftSurvivor
             if (!built)
             {
                 built = true;
-                if (cargo != Cargo.Enemy) WeiFurnitureArt.Attach(transform, cargo == Cargo.Sofa);
+                if (cargo != Cargo.Enemy) ExtendedFurnitureArt.Attach(transform, Furniture);
                 trail = WeiFurnitureArt.Trail(transform, cargo == Cargo.Enemy);
+                if (cargo != Cargo.Enemy)
+                {
+                    trail.startColor = FurnitureCatalog.ColorFor(Furniture); trail.startWidth = .42f; trail.time = .32f;
+                    var halo = new GameObject("FurnitureElementHalo").transform; halo.SetParent(transform,false);
+                    var geo = halo.gameObject.AddComponent<RadiantGeometry>();
+                    geo.Ring("CargoRune", FurnitureCatalog.ColorFor(Furniture), FurnitureCatalog.Radius(Furniture) + .25f, .045f, Quaternion.identity, Vector3.zero, 32);
+                }
             }
             trail.emitting = mode == Mode.Flying;
+            if(batch != 0)
+            {
+                trail.startColor=new Color(.3f,1.2f,2f,.9f);
+                trail.endColor=new Color(.35f,.5f,1.8f,0f);
+                trail.startWidth=.8f;trail.time=.5f;
+            }
             if (flashUntil > Time.time && !frame)
             {
                 frame = WeiFurnitureArt.Frame();

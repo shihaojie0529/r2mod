@@ -55,7 +55,7 @@ namespace RiftSurvivor
     // The owning motor alone moves and the native network transform replicates it.
     public sealed class XiaoheiBlinkTravel : BaseState
     {
-        internal Vector3 departure;
+        internal Vector3 departure, destination;
         internal bool recall, first;
         internal float started;
 
@@ -80,6 +80,7 @@ namespace RiftSurvivor
         {
             base.OnSerialize(writer);
             writer.Write(departure);
+            writer.Write(destination);
             writer.Write(recall);
             writer.Write(first);
             writer.Write(started);
@@ -89,6 +90,7 @@ namespace RiftSurvivor
         {
             base.OnDeserialize(reader);
             departure = reader.ReadVector3();
+            destination = reader.ReadVector3();
             recall = reader.ReadBoolean();
             first = reader.ReadBoolean();
             started = reader.ReadSingle();
@@ -110,6 +112,7 @@ namespace RiftSurvivor
         private int lastShorten, lastCharge;
 
         internal bool HasOrigin => Time.fixedTime < expires;
+        internal float OriginRemaining => Mathf.Max(0f, expires - Time.fixedTime);
 
         internal static void Register()
         {
@@ -252,6 +255,7 @@ namespace RiftSurvivor
             travel = new XiaoheiBlinkTravel
             {
                 departure = start,
+                destination = destination,
                 recall = recall,
                 first = !recall && !HasOrigin,
                 started = Run.FixedTimeStamp.now.t
@@ -266,6 +270,11 @@ namespace RiftSurvivor
 
         internal void ShowTravel(XiaoheiBlinkTravel travel)
         {
+            if (NetworkClient.active)
+            {
+                var core = body.corePosition - transform.position;
+                SkillBlinkVisual.Show(travel.departure + core, travel.destination + core, false, travel.recall);
+            }
             if (travel.recall) ClearOrigin();
             if (!travel.first) return;
             ClearOrigin();

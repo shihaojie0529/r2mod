@@ -59,7 +59,8 @@ namespace RiftSurvivor
         private static uint nextBatch;
         private CharacterBody body;
         private WeiThrowActor held;
-        private bool initialSlam, nextSofa;
+        private bool initialSlam;
+        private int nextFurniture;
         private Ray grabAim;
         private float grabbedAt, previewAt;
         private double nextM1;
@@ -140,8 +141,8 @@ namespace RiftSurvivor
                 origin = Hand(body, .2f);
             }
             float coefficient = WeiVitals.TrySpend(body) ? 4f : 3.2f;
-            var prop = WeiThrowActor.MakeFurniture(body, origin, nextSofa);
-            nextSofa = !nextSofa;
+            var prop = WeiThrowActor.MakeFurnitureKind(body, origin, (FurnitureKind)nextFurniture);
+            nextFurniture = (nextFurniture + 1) % FurnitureCatalog.Count;
             prop.Launch(body, aim, coefficient, DamageTypeCombo.GenericPrimary, false, 0);
             return true;
         }
@@ -238,10 +239,12 @@ namespace RiftSurvivor
                     if (reserved.Count == 6) break;
                 }
                 if (reserved.Count == 0 || !TryPay(true)) return;
+                SkillSpectacle.Emit(SpectacleKind.SelectAll, body.footPosition + Vector3.up * .12f, Vector3.up, 4.5f);
                 uint batch = ++nextBatch;
                 if (batch == 0) batch = ++nextBatch;
                 foreach (var prop in reserved)
                 {
+                    SkillSpectacle.Selection(body.corePosition, prop.transform.position);
                     bool slam = prop.Passenger && aim.target && prop.Passenger == aim.target.healthComponent;
                     prop.Launch(body, aim, prop.Passenger ? 6f : 4f, DamageTypeCombo.GenericSpecial, slam, batch);
                 }

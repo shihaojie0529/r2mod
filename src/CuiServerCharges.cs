@@ -42,6 +42,21 @@ namespace RiftSurvivor
             return ledger.TrySpendRemote(slot, Time.fixedTimeAsDouble);
         }
 
+        internal static void Reset(GenericSkill slot)
+        {
+            DirectSkillKillReset.Apply(slot);
+            var ledger = slot ? slot.GetComponent<CuiServerCharges>() : null;
+            if (!ledger) return;
+            foreach (var account in ledger.slots)
+            {
+                if (account.slot != slot || account.skill != slot.skillDef) continue;
+                account.capacity = account.available = Math.Max(0, slot.maxStock);
+                account.lastNative = slot.stock;
+                account.fraction = 0d;
+                account.sampledAt = Time.fixedTimeAsDouble;
+            }
+        }
+
         private bool TrySpendRemote(GenericSkill slot, double now)
         {
             Account account = null;

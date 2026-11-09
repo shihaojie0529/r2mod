@@ -34,6 +34,7 @@ namespace RiftSurvivor
 
         internal static void Install(GameObject prefab)
         {
+            OriginalModelGuard.Prepare(prefab);
             var model = prefab.GetComponentInChildren<CharacterModel>(true);
             var animator = prefab.GetComponentInChildren<Animator>(true);
             (model ? model.gameObject : animator ? animator.gameObject : prefab).AddComponent<JieModel>();
@@ -47,6 +48,7 @@ namespace RiftSurvivor
             target = Array.Find(renderers, r => r.name == "CommandoMesh");
             if (!target && model) target = model.mainSkinnedMeshRenderer;
             if (!target && renderers.Length > 0) target = renderers[0];
+            LateUpdate();
         }
 
         private void LateUpdate()
@@ -84,21 +86,23 @@ namespace RiftSurvivor
                     return;
                 }
             }
+            var material = SurvivorDisplay.DisplayMaterial(skin.Material, body);
             if (target.sharedMesh != skin.Mesh || target.rootBone != rig.Root)
             {
                 target.bones = bones;
                 target.rootBone = rig.Root;
                 target.sharedMesh = skin.Mesh;
-                target.sharedMaterial = skin.Material;
+                target.sharedMaterial = material;
                 target.localBounds = new Bounds(Vector3.up, new Vector3(3.4f, 3.2f, 3.4f));
             }
-            if (slot >= 0 && infos[slot].defaultMaterial != skin.Material)
+            if (slot >= 0 && infos[slot].defaultMaterial != material)
             {
-                infos[slot].defaultMaterial = skin.Material;
+                infos[slot].defaultMaterial = material;
                 model.materialsDirty = true;
             }
-            else if (slot < 0 && target.sharedMaterial != skin.Material)
-                target.sharedMaterial = skin.Material;
+            else if (slot < 0 && target.sharedMaterial != material)
+                target.sharedMaterial = material;
+            OriginalModelGuard.Reveal(target);
             Pose(body ? Time.deltaTime : Time.unscaledDeltaTime);
         }
 

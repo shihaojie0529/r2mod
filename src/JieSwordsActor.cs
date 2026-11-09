@@ -10,7 +10,7 @@ namespace RiftSurvivor
     // Joined-in-progress clients receive its current pose and attachment socket.
     public sealed class JieAzureSword : NetworkBehaviour
     {
-        private enum Phase : byte { Outbound, Attached, Planted, Returning, Retired }
+        private enum Phase : byte { Outbound, Attached, Planted, Returning, Docking, Retired }
         private const float Radius = .085f, OutSpeed = 47f, ReturnSpeed = 68f;
         private const float SendInterval = .05f;
         private Phase phase;
@@ -19,7 +19,10 @@ namespace RiftSurvivor
         private HurtBox target, attachment, recallAttachment;
         internal HealthComponent AttachedHealth { get; private set; }
         private bool hadLock, crit, frozen;
-        private float flightTime;
+        private float flightTime, dockTime;
+        private int dockSlot;
+        private TrailRenderer[] trails;
+        private Transform visual;
         private Vector3 socketPoint, socketForward, destination;
         private short socketIndex;
         private NetworkInstanceId socketBody;
@@ -42,7 +45,11 @@ namespace RiftSurvivor
         public override void OnStartClient()
         {
             base.OnStartClient();
-            JieSwordArt.Attach(transform, new Color(.18f, .92f, .81f));
+            visual = new GameObject("AzureBlade").transform;
+            visual.SetParent(transform, false);
+            visual.localScale = new Vector3(1.75f, 1.75f, 1.5f);
+            JieSwordArt.Attach(visual, JieSwordArt.Jade);
+            trails = JieSwordArt.Trail(transform, JieSwordArt.Jade, .30f, .23f);
         }
 
         public override float GetNetworkSendInterval() => SendInterval;
@@ -84,6 +91,10 @@ namespace RiftSurvivor
 
         private void LateUpdate()
         {
+            if (visual && phase == Phase.Docking)
+                visual.localScale = Vector3.Lerp(visual.localScale, Vector3.one * 1.02f, Time.deltaTime * 16f);
+            if (trails != null)
+                foreach (var trail in trails) trail.emitting = phase == Phase.Outbound || phase == Phase.Returning || phase == Phase.Docking;
             if (NetworkServer.active) return;
             if (phase == Phase.Attached)
             {
@@ -96,14 +107,14 @@ namespace RiftSurvivor
                 }
                 if (attachment && attachment.healthComponent && attachment.healthComponent.alive) FollowAttachment();
             }
-            else if (phase == Phase.Outbound || phase == Phase.Returning)
+            else if (phase == Phase.Outbound || phase == Phase.Returning || phase == Phase.Docking)
                 transform.position = Vector3.Lerp(fromSample, lastSample, (Time.time - sampleAt) / SendInterval);
         }
 
         private void FixedUpdate()
         {
             if (!NetworkServer.active || phase == Phase.Retired) return;
-            if (!owner || !owner.healthComponent || !owner.healthComponent.alive) { Retire(); return; }
+            if (!owner || !owner.isActiveAndEnabled || !owner.healthComponent || !owner.healthComponent.alive) { Retire(); return; }
             if (phase == Phase.Attached)
             {
                 if (attachment && AttachedHealth && AttachedHealth.alive) FollowAttachment();
@@ -118,6 +129,20 @@ namespace RiftSurvivor
                 return;
             }
             if (phase == Phase.Planted) return;
+            // The gameplay recall still ends at the cast-time point. Only this
+            // final, harmless flourish follows the wearer back to the sword rack.
+            if (phase == Phase.Docking)
+            {
+                dockTime += Time.fixedDeltaTime;
+                JieSwordRackVisual.SocketPose(owner, dockSlot, out var home, out var pose);
+                transform.position = Vector3.MoveTowards(transform.position, home, ReturnSpeed * Time.fixedDeltaTime);
+                transform.rotation = Quaternion.Slerp(transform.rotation, pose, 16f * Time.fixedDeltaTime);
+                SetDirtyBit(1);
+                // Keep the harmless docking pose alive for several 50 ms network
+                // samples, even when the cast point was already beside the rack.
+                if ((dockTime >= .16f && (transform.position - home).sqrMagnitude < .0025f) || dockTime >= .45f) Retire();
+                return;
+            }
 
             Vector3 origin = transform.position;
             bool returning = phase == Phase.Returning;
@@ -134,7 +159,11 @@ namespace RiftSurvivor
                 // A sword fired into empty sky never occupies a planted slot.
                 if (flightTime >= 4f) Retire();
             }
-            if (phase == Phase.Returning && (transform.position - destination).sqrMagnitude < .00001f) Retire();
+            if (phase == Phase.Returning && (transform.position - destination).sqrMagnitude < .00001f)
+            {
+                phase = Phase.Docking;
+                SetDirtyBit(1);
+            }
         }
 
         private Vector3 TurnToTarget(Vector3 origin)
@@ -250,6 +279,7 @@ namespace RiftSurvivor
             attachment = null;
             AttachedHealth = null;
             destination = endpoint;
+            dockSlot = rack ? rack.ClaimReturnSocket() : 0;
             returnedHits = new HashSet<HealthComponent>();
             crit = owner.RollCrit();
             phase = Phase.Returning;
@@ -269,7 +299,7 @@ namespace RiftSurvivor
             var victim = hurt.healthComponent;
             if (!returnedHits.Add(victim)) return;
             WeiBonds.DirectHit(owner, victim, point, DinnerStrike.Sword);
-            XiaoheiBallistics.HitTarget(owner, victim, hurt, owner.damage * 1.8f, crit, DamageTypeCombo.GenericSecondary);
+            XiaoheiBallistics.HitTarget(owner, victim, hurt, owner.damage * 1.8f, crit, DamageTypeCombo.GenericSecondary, resetSecondary: true);
             JieBonds.OnRecallHit(owner, victim, point);
             HitFlash(point, transform.forward);
         }

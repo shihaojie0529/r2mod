@@ -41,8 +41,7 @@ namespace RiftSurvivor
             Add<WeiSelectAll>(slots.special, "SELECT", "wei-select", "Select", 18f);
             WeiModel.Install(body);
             var master = PrefabAPI.InstantiateClone(SurvivorContent.LoadPrefab("CommandoMonsterMaster"), "WeiGeMonsterMaster", true);
-            var display = PrefabAPI.InstantiateClone(SurvivorContent.LoadPrefab("CommandoDisplay"), "WeiGeDisplay", false);
-            WeiModel.Install(display);
+            var display = SurvivorDisplay.Create("WeiGeDisplay", WeiModel.Install);
             SurvivorContent.RegisterRangedSurvivor("WeiGe", "WEIGE", 103f, character, master, display);
         }
 

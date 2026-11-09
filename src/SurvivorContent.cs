@@ -16,7 +16,6 @@ namespace RiftSurvivor
             SurvivorLanguage.Register();
             CuiVitals.Register();
             var originalBody = LoadPrefab("CommandoBody");
-            var originalDisplay = LoadPrefab("CommandoDisplay");
             var originalMaster = LoadPrefab("CommandoMonsterMaster");
 
             var body = PrefabAPI.InstantiateClone(originalBody, "RiftRunnerBody", true);
@@ -29,6 +28,7 @@ namespace RiftSurvivor
             character.levelMaxHealth = 42f;
             character.baseMoveSpeed = 8f;
             CuiVitals.Install(body);
+            body.AddComponent<DirectSkillKillReset>().slot = SkillSlot.Utility;
             SurvivorSkills.Configure(body);
             SurvivorModel.Install(body);
 
@@ -40,8 +40,7 @@ namespace RiftSurvivor
             var survivor = ScriptableObject.CreateInstance<SurvivorDef>();
             survivor.cachedName = "RiftRunner";
             survivor.bodyPrefab = body;
-            survivor.displayPrefab = PrefabAPI.InstantiateClone(originalDisplay, "RiftRunnerDisplay", false);
-            SurvivorModel.Install(survivor.displayPrefab);
+            survivor.displayPrefab = SurvivorDisplay.Create("RiftRunnerDisplay", SurvivorModel.Install);
             survivor.primaryColor = character.bodyColor;
             survivor.displayNameToken = character.baseNameToken;
             survivor.descriptionToken = "RIFTRUNNER_DESCRIPTION";

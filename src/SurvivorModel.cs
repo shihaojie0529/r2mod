@@ -8,7 +8,7 @@ using UnityEngine.Rendering;
 
 namespace RiftSurvivor
 {
-    // Native skins may reassign the renderer after Awake, including in the lobby.
+    // Bind the authored appearance in Awake before its first rendered frame.
     [DefaultExecutionOrder(30000)]
     public sealed class SurvivorModel : MonoBehaviour
     {
@@ -35,11 +35,13 @@ namespace RiftSurvivor
         private static Vector3[] pivots;
         private static bool loggedFailure;
         private CharacterModel model;
+        private CharacterBody body;
         private SkinnedMeshRenderer target;
         private CuiRig rig;
 
         internal static void Install(GameObject prefab)
         {
+            OriginalModelGuard.Prepare(prefab);
             var characterModel = prefab.GetComponentInChildren<CharacterModel>(true);
             var fallback = prefab.GetComponentInChildren<Animator>(true);
             var owner = characterModel ? characterModel.gameObject : (fallback ? fallback.gameObject : prefab);
@@ -50,10 +52,12 @@ namespace RiftSurvivor
         private void Awake()
         {
             model = GetComponent<CharacterModel>();
+            body = GetComponentInParent<CharacterBody>();
             var renderers = GetComponentsInChildren<SkinnedMeshRenderer>(true);
             target = Array.Find(renderers, r => string.Equals(r.name, "CommandoMesh", StringComparison.OrdinalIgnoreCase));
             if (!target && model) target = model.mainSkinnedMeshRenderer;
             if (!target) target = renderers.OrderByDescending(r => r.bones.Length).FirstOrDefault();
+            LateUpdate();
         }
 
         private void LateUpdate()
@@ -71,7 +75,7 @@ namespace RiftSurvivor
                     if (!shader) return;
                     LoadGeometry(shader);
                     if (!costume) costume = BuildMesh();
-                    var body = model && model.body ? model.body : GetComponentInParent<CharacterBody>();
+                    body = model && model.body ? model.body : GetComponentInParent<CharacterBody>();
                     rig = new CuiRig(transform, target, body, pivots);
                     HideOriginalGear();
                     AttachSkin();
@@ -85,24 +89,26 @@ namespace RiftSurvivor
                     return;
                 }
             }
+            var material = SurvivorDisplay.DisplayMaterial(paletteMaterial, body);
             if (target.sharedMesh != costume || target.rootBone != rig.Root) AttachSkin();
-            if (slot >= 0 && infos[slot].defaultMaterial != paletteMaterial)
+            if (slot >= 0 && infos[slot].defaultMaterial != material)
             {
-                infos[slot].defaultMaterial = paletteMaterial;
+                infos[slot].defaultMaterial = material;
                 model.materialsDirty = true;
             }
-            else if (slot < 0 && target.sharedMaterial != paletteMaterial)
-                target.sharedMaterial = paletteMaterial;
+            else if (slot < 0 && target.sharedMaterial != material)
+                target.sharedMaterial = SurvivorDisplay.DisplayMaterial(paletteMaterial, body);
+            OriginalModelGuard.Reveal(target);
         }
 
         // The base prefabs can have a renderer before their addressable mesh or material arrives.
         internal static Shader FindSkinShader(Renderer renderer, Material slotMaterial)
         {
             if (slotMaterial && slotMaterial.shader) return slotMaterial.shader;
-            var gameShader = Shader.Find("Hopoo Games/Deferred/Standard");
+            var gameShader = CombatVisuals.TextureShader;
             if (gameShader) return gameShader;
             var material = renderer.sharedMaterial;
-            return material && material.shader ? material.shader : Shader.Find("Standard");
+            return material && material.shader ? material.shader : CombatVisuals.TextureShader;
         }
 
         private void AttachSkin()
@@ -110,7 +116,7 @@ namespace RiftSurvivor
             target.sharedMesh = costume;
             target.bones = rig.OrderedBones;
             target.rootBone = rig.Root;
-            target.sharedMaterial = paletteMaterial;
+            target.sharedMaterial = SurvivorDisplay.DisplayMaterial(paletteMaterial, body);
             target.localBounds = new Bounds(new Vector3(0, 1f, .15f), new Vector3(3f, 3.3f, 3f));
         }
 
@@ -148,6 +154,8 @@ namespace RiftSurvivor
                 paletteMaterial.SetFloat("_NormalStrength", 0f);
             if (paletteMaterial.HasProperty("_Smoothness"))
                 paletteMaterial.SetFloat("_Smoothness", 0.08f);
+            if (paletteMaterial.HasProperty("_SpecularStrength")) paletteMaterial.SetFloat("_SpecularStrength", 0f);
+            CombatVisuals.ApplyReadability(paletteMaterial);
             geometry = data;
         }
 
@@ -180,7 +188,7 @@ namespace RiftSurvivor
                 name = "RiftRunnerPalette", filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp
             };
             palette.SetPixels32(pixels);
-            palette.Apply(false, true);
+            palette.Apply(false, false);
             return palette;
         }
 

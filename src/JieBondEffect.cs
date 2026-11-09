@@ -15,7 +15,7 @@ namespace RiftSurvivor
 
         internal static void Register()
         {
-            prefab = PrefabAPI.CreateEmptyPrefab("JieGeBondEffect", false);
+            prefab = CombatVisuals.EffectPrefab("JieGeBondEffect");
             prefab.AddComponent<EffectComponent>().applyScale = false;
             var attributes = prefab.AddComponent<VFXAttributes>();
             attributes.vfxPriority = VFXAttributes.VFXPriority.Always;

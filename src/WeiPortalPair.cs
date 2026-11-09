@@ -195,6 +195,11 @@ namespace RiftSurvivor
             var root = new GameObject("WeiDoorFrame").transform;
             root.SetParent(transform, false);
             root.SetPositionAndRotation(center, Quaternion.Inverse(inverse));
+            var glow = root.gameObject.AddComponent<RadiantGeometry>();
+            glow.Arc("PortalOuterRune", new Color(color.r,color.g,color.b,.6f), 1.65f, .05f, 20f, 140f);
+            glow.Arc("PortalReturnRune", new Color(color.r,color.g,color.b,.6f), 1.65f, .05f, 200f, 140f);
+            glow.Arc("PortalInnerRune", new Color(1f,1f,1f,.45f), 1.51f, .018f, 45f, 90f);
+            root.gameObject.AddComponent<PortalFramePulse>();
             var frame = Stroke(root, color, .065f);
             frame.loop = true;
             frame.positionCount = 8;
@@ -209,11 +214,12 @@ namespace RiftSurvivor
         {
             var line = new GameObject("DoorLight").AddComponent<LineRenderer>();
             line.transform.SetParent(parent, false);
-            if (!frameMaterial) frameMaterial = new Material(Shader.Find("Sprites/Default") ?? Shader.Find("Standard"));
+            if (!frameMaterial) frameMaterial = CombatVisuals.Stroke("WeiPortalSoftFrame");
             line.sharedMaterial = frameMaterial;
             line.useWorldSpace = false;
             line.startWidth = line.endWidth = width;
             line.startColor = line.endColor = color;
+            line.numCornerVertices = 4; line.numCapVertices = 4;
             line.shadowCastingMode = ShadowCastingMode.Off;
             line.receiveShadows = false;
             return line;

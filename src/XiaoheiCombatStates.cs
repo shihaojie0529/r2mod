@@ -94,6 +94,7 @@ namespace RiftSurvivor
             if (NetworkServer.active)
                 XiaoheiBallistics.Seek(characterBody, combat, aim, XiaoheiBallistics.Muzzle(characterBody));
             if (isAuthority) XiaoheiBlink.BeginSlide(characterBody);
+            if (NetworkClient.active && inputBank.moveVector.sqrMagnitude > .001f) XiaoheiSlideVisual.Begin(characterBody);
         }
     }
 
@@ -104,21 +105,9 @@ namespace RiftSurvivor
 
         protected override void Cast(XiaoheiCombat combat, Ray aim)
         {
-            var side = Vector3.Cross(Vector3.up, aim.direction).normalized;
-            if (side.sqrMagnitude < .5f) side = transform.right;
-            float distance = Physics.SphereCast(characterBody.corePosition, .35f, side, out var hit, 1.2f,
-                LayerIndex.world.mask, QueryTriggerInteraction.Ignore) ? Mathf.Max(0f, hit.distance - .05f) : 1.2f;
-            var offset = side * distance;
-            var gun = XiaoheiModel.Muzzle(characterBody);
-            var muzzle = (gun ? gun.position : characterBody.aimOrigin) + offset;
-            if (NetworkClient.active)
-            {
-                var echo = XiaoheiModel.CreateEcho(characterBody, offset, XiaoheiReplayVolley.Duration);
-                if (echo) echo.AddComponent<XiaoheiReplayPose>().Bind(characterBody, muzzle, gun ? gun.forward : aim.direction);
-                Util.PlaySound("Play_commando_M2", gameObject);
-            }
             if (NetworkServer.active)
-                gameObject.AddComponent<XiaoheiReplayVolley>().Begin(characterBody, muzzle, aim, combat.SpendHighlights());
+                XiaoheiReplaySentry.Spawn(characterBody, aim, combat.SpendHighlights());
+            if (NetworkClient.active) Util.PlaySound("Play_commando_M2", gameObject);
         }
     }
 }

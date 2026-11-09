@@ -1,0 +1,5 @@
+Actual lobby scene: Assets/RoR2/Base/Scenes/lobby/lobby.unity
+Native game-mode background: DefaultLobbyBackground
+Top: original material; bottom: lobby fill. Same pose/camera/scene lights. No UI/postprocessing.
+Directional Light Directional intensity=1
+Lobby scene lights=1

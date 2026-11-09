@@ -1,0 +1,12 @@
+Columns: idle, left jab, right hook (cross), right uppercut.
+Top: both fists close up. Bottom: upper-body distance. Fixed scale within each row.
+Real Cui skin CPU-baked at each authored pose; actual hand bones and glow component. Zero pump; no network body.
+Combat source material: RiftRunnerCloth. No character-select emissive fill.
+Baked hand vertices are compared with the exact animated hand-bone skinning transform; offsets must stay below 1cm at unit scale.
+Short strike trails sample the actual authored hand trajectory within the renderer lifetime.
+2x supersampled Unity GPU capture. Key=.55, fill=.12; scene lights excluded. No bloom or postprocessing.
+Orthographic half-heights: detail=0.3458023, upper-body=0.704232.
+idle normalized pose=0.3 left trail=False right trail=False baked-to-bone hand offsets L=7.337971E-08 R=0.0001220703
+jab normalized pose=0.28125 left trail=True right trail=False baked-to-bone hand offsets L=6.143906E-08 R=6.103516E-05
+cross normalized pose=0.28125 left trail=False right trail=True baked-to-bone hand offsets L=2.980232E-08 R=6.103519E-05
+uppercut normalized pose=0.33333 left trail=False right trail=True baked-to-bone hand offsets L=3.332001E-08 R=4.214685E-08

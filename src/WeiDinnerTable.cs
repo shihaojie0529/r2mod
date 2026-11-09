@@ -17,7 +17,7 @@ namespace RiftSurvivor
         {
             transform.position = GetComponent<EffectComponent>().effectData.origin;
             if (!tableMesh) tableMesh = BuildTable();
-            if (!paint) paint = new Material(Shader.Find("Sprites/Default") ?? Shader.Find("Standard"));
+            if (!paint) paint = CombatVisuals.PaletteSurface(tableMesh, "WeiDinnerFinish", .26f);
             table = new GameObject("FourPlaceSettings").transform;
             table.SetParent(transform, false);
             table.gameObject.AddComponent<MeshFilter>().sharedMesh = tableMesh;
@@ -56,7 +56,11 @@ namespace RiftSurvivor
             door.enabled = fall < 1f;
             float after = Mathf.Max(0f, age - WeiBanquet.FallTime);
             shock.enabled = after > 0f && after < .33f;
-            shock.transform.localScale = Vector3.one * Mathf.Lerp(.1f, 8f, Mathf.Clamp01(after / .33f));
+            float wave = Mathf.Clamp01(after / .33f);
+            shock.transform.localScale = Vector3.one * Mathf.Lerp(.1f, 8f, 1f-(1f-wave)*(1f-wave));
+            shock.startColor = shock.endColor = new Color(.35f,.85f,1f,(1f-wave)*(1f-wave));
+            var doorColor = new Color(.25f,.83f,1f,1f-Mathf.SmoothStep(.6f,1f,fall));
+            door.startColor = door.endColor = doorColor;
             table.localScale = Vector3.one * (1f - Mathf.Clamp01((after - .42f) / .25f));
         }
 

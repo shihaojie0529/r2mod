@@ -11,7 +11,9 @@ namespace RiftSurvivor
     [DisallowMultipleComponent]
     public sealed class XiaoheiCombat : MonoBehaviour
     {
-        private static BuffDef highlight, marked;
+        private static BuffDef highlight, marked, hitProgress;
+        internal static int Highlights(CharacterBody body) => body && highlight ? body.GetBuffCount(highlight) : 0;
+        internal static int HitProgress(CharacterBody body) => body && hitProgress ? body.GetBuffCount(hitProgress) : 0;
         private static GameObject markNotice;
         internal static GameObject PistolTracer, EchoTracer, Impact, SeekerEffect, MuzzleFlash;
 
@@ -22,14 +24,17 @@ namespace RiftSurvivor
 
         internal static void Register()
         {
+            XiaoheiReplaySentry.Register();
             highlight = RegisterBuff("XiaoheiHighlight", "xh-highlight", new Color(.32f, 1f, .88f), true);
             marked = RegisterBuff("XiaoheiMarked", "xh-seeker", new Color(1f, .53f, .23f), false);
+            hitProgress = RegisterBuff("XiaoheiHitProgress", "xh-pistol", new Color(.32f, 1f, .88f), true);
+            hitProgress.ignoreGrowthNectar = true;
             PistolTracer = XiaoheiShotVisual.Prefab("XiaoheiPistolStreak", XiaoheiShotKind.Pistol);
             EchoTracer = XiaoheiShotVisual.Prefab("XiaoheiReplayStreak", XiaoheiShotKind.Replay);
             Impact = Load("Common/VFX/OmniImpactVFX");
             SeekerEffect = XiaoheiShotVisual.Prefab("XiaoheiAmberRound", XiaoheiShotKind.Seeker);
             MuzzleFlash = Load("Common/VFX/Muzzleflash1");
-            markNotice = PrefabAPI.CreateEmptyPrefab("XiaoheiMarkNotice", false);
+            markNotice = CombatVisuals.EffectPrefab("XiaoheiMarkNotice");
             markNotice.AddComponent<EffectComponent>();
             var vfx = markNotice.AddComponent<VFXAttributes>();
             vfx.DoNotPool = true;
@@ -93,6 +98,7 @@ namespace RiftSurvivor
             if (ConsumeCupLine() && !landed) Speak("XIAOHEI_BOND_MISS");
             if (!landed) streak.Miss(Time.fixedTime);
             else if (streak.Hit()) RewardStreak();
+            body.SetBuffCount(hitProgress.buffIndex, streak.Hits);
         }
 
         internal bool ConsumeCupLine()
@@ -113,6 +119,7 @@ namespace RiftSurvivor
             }
             if (!body.healthComponent.alive) return;
             if (streak.Repair(attemptedRepair, Time.fixedTime)) RewardStreak();
+            body.SetBuffCount(hitProgress.buffIndex, streak.Hits);
             if (!victim || !victim.alive || !victim.body) return;
             var marks = victim.GetComponent<XiaoheiMarks>();
             if (!marks) marks = victim.gameObject.AddComponent<XiaoheiMarks>();

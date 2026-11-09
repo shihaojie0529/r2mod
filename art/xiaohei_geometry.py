@@ -215,6 +215,8 @@ def build(add):
          [(0,.007,.007),(1,.007,.007)],LIGHT,hand,10)
     line("Light pistol / trigger guard",[(x,1.349,.484),(x,1.316,.479),(x,1.311,.446)],
          [.006,.005,.005],INK,hand,6)
+    from pistol_details import build as build_pistol_details
+    build_pistol_details(add)
     build_face(mesh,shell,line,body,limb)
 
 

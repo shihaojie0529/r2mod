@@ -1,0 +1,70 @@
+[Info   :Combat Visual Smoke] SMOKE PASS Addressable shaders
+[Info   :Combat Visual Smoke] SMOKE PASS Additive skill HUD preserves vanilla icon
+[Info   :Combat Visual Smoke] SMOKE PASS Visible sword counter
+[Info   :Combat Visual Smoke] SMOKE sword shader=Hopoo Games/Deferred/Standard color=True
+[Info   :Combat Visual Smoke] SMOKE PASS Azure sword mesh and trail
+[Info   :Combat Visual Smoke] SMOKE PASS Gold seal
+[Info   :Combat Visual Smoke] SMOKE PASS Seeker mesh and trail
+[Info   :Combat Visual Smoke] SMOKE PASS Chinese HUD font
+[Info   :Combat Visual Smoke] SMOKE PASS Effect XiaoheiPistolStreak
+[Info   :Combat Visual Smoke] SMOKE PASS Effect XiaoheiReplayStreak
+[Info   :Combat Visual Smoke] SMOKE PASS Effect XiaoheiAmberRound
+[Info   :Combat Visual Smoke] SMOKE PASS Effect JieGoldSwordBolt
+[Info   :Combat Visual Smoke] SMOKE PASS Effect JieFallingHeavenSword
+[Info   :Combat Visual Smoke] SMOKE WAITING FOR CONTENT
+[Info   :Combat Visual Smoke] SMOKE display RiftRunner mesh=CuiGeSkin bones=15 scale=(1.00, 1.00, 1.00)
+[Info   :Combat Visual Smoke] SMOKE PASS Own display RiftRunner
+[Info   :Combat Visual Smoke] SMOKE PASS Own display after first frame RiftRunner
+[Info   :Combat Visual Smoke] SMOKE PASS Hidden original body gear RiftRunner
+[Info   :Combat Visual Smoke] SMOKE display Xiaohei mesh=XiaoheiSkin bones=15 scale=(1.00, 1.00, 1.00)
+[Info   :Combat Visual Smoke] SMOKE PASS Own display Xiaohei
+[Info   :Combat Visual Smoke] SMOKE PASS Own display after first frame Xiaohei
+[Info   :Combat Visual Smoke] SMOKE PASS Hidden original body gear Xiaohei
+[Info   :Combat Visual Smoke] SMOKE display JieGe mesh=JieGeSkin bones=16 scale=(1.00, 1.00, 1.00)
+[Info   :Combat Visual Smoke] SMOKE PASS Own display JieGe
+[Info   :Combat Visual Smoke] SMOKE PASS Own display after first frame JieGe
+[Info   :Combat Visual Smoke] SMOKE PASS Hidden original body gear JieGe
+[Info   :Combat Visual Smoke] SMOKE display WeiGe mesh=WeiGeSkin bones=15 scale=(1.00, 1.00, 1.00)
+[Info   :Combat Visual Smoke] SMOKE PASS Own display WeiGe
+[Info   :Combat Visual Smoke] SMOKE PASS Own display after first frame WeiGe
+[Info   :Combat Visual Smoke] SMOKE PASS Hidden original body gear WeiGe
+[Info   :Combat Visual Smoke] SMOKE PASS Charge targeting, direct skill kill reset and server charge ledger
+[Info   :Combat Visual Smoke] SMOKE PASS Jie crosshair flight and balanced gravity
+[Info   :Combat Visual Smoke] SMOKE PASS Jie instant blink capsule collision
+[Info   :Combat Visual Smoke] SMOKE PASS Jie blink sword light and rings
+[Info   :Combat Visual Smoke] SMOKE PASS Jie blink effect cleanup
+[Info   :Combat Visual Smoke] SMOKE PASS Lobby materials stay separate and preserve emission
+[Info   :Combat Visual Smoke] SMOKE PASS Additive glow shader supports transparency
+[Info   :Combat Visual Smoke] SMOKE PASS Six distinct furniture meshes and damage profiles
+[Info   :Combat Visual Smoke] SMOKE PASS Giant gold fist and celestial sword immortal
+[Info   :Combat Visual Smoke] SMOKE PASS Ordinary movement has no automatic VFX emitter
+[Info   :Combat Visual Smoke] SMOKE PASS Networked spectacle catalog and lightning
+[Info   :Combat Visual Smoke] SMOKE PASS Spectacle lifetime cleanup
+[Info   :Combat Visual Smoke] SMOKE PASS Furniture slow and bleed are server owned
+[Info   :Combat Visual Smoke] SMOKE PASS Cui native barrier gain, uppercut and two health cap
+[Info   :Combat Visual Smoke] SMOKE PASS Cui native barrier holds in combat and slowly decays out of combat
+[Info   :Combat Visual Smoke] SMOKE PASS Cui pump reductions and charging guard multiply
+[Info   :Combat Visual Smoke] SMOKE PASS Cui charge scaling and one-use server windup permit
+[Info   :Combat Visual Smoke] SMOKE PASS Cui instant team heal includes self, distant ally and excludes enemy/dead
+[Info   :Combat Visual Smoke] SMOKE PASS Cui fists bind to a bodyless authored display
+[Info   :Combat Visual Smoke] SMOKE PASS Cui gold skin preserves actual hand geometry and native visibility registration
+[Info   :Combat Visual Smoke] SMOKE PASS Cui idle, run and jump keep fists lit without movement trails
+[Info   :Combat Visual Smoke] SMOKE PASS Cui jab, hook and uppercut illuminate only their striking hand
+[Info   :Combat Visual Smoke] SMOKE PASS Cui death and native invisibility hide all fist effects
+[Info   :Combat Visual Smoke] SMOKE PASS Cui fist registration recovers after cloaking and a renderer-list rebuild
+[Info   :Combat Visual Smoke] SMOKE PASS Cui fist component removal unregisters every owned renderer
+[Info   :Combat Visual Smoke] SMOKE PASS Nine sword reserve counts, unique docking sockets and cloak visibility
+[Info   :Combat Visual Smoke] SMOKE PASS Transparent soft materials share cached feather masks
+[Info   :Combat Visual Smoke] SMOKE PASS Local avatar ignores walls without mutating world materials
+[Info   :Combat Visual Smoke] SMOKE PASS Every combat burst has bounded particles and finite cleanup
+[Info   :Combat Visual Smoke] SMOKE PASS All burst renderers expire after the animation
+[Info   :Combat Visual Smoke] SMOKE PASS Local celestial avatar remains visible and clears crosshair
+[Info   :Combat Visual Smoke] SMOKE PASS Xiaohei echo uses a transparent authored pose with a smooth expiry
+[Info   :Combat Visual Smoke] SMOKE PASS Heaven sword shockwave starts on landing rather than cast
+[Info   :Combat Visual Smoke] SMOKE PASS Xiaohei echo frees its baked pose mesh on expiry
+[Info   :Combat Visual Smoke] SMOKE PASS Blink endpoints survive network state serialization
+[Info   :Combat Visual Smoke] SMOKE PASS Blink and recall show anchored paths and visible endpoint bursts
+[Info   :Combat Visual Smoke] SMOKE PASS Replay avatar is fifteen metres with luminous geometry and bounded particles
+[Info   :Combat Visual Smoke] SMOKE PASS Giant local view fits left side across aspect ratios and aiming angles
+[Info   :Combat Visual Smoke] SMOKE PASS New movement and giant effects free objects and baked meshes
+[Info   :Combat Visual Smoke] SMOKE COMPLETE

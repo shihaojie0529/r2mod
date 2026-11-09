@@ -1,0 +1,87 @@
+小黑大哥合集 0.5.15 验证记录
+时间：2026-11-07T01:34:36
+
+Release 构建成功，0 个错误；保留现有 MMHOOK NU1701 依赖警告。
+隔离 BepInEx 配置启动真实 Risk of Rain 2 / Unity / D3D11，63 项通过，0 项失败，SMOKE COMPLETE。
+生成并人工查看真实 GPU 画面：飞剑/法相、实际骨架双拳、武器模型、十类技能四帧序列。
+法相校验 3 种 FOV × 3 种宽高比 × 3 种俯仰角，每组覆盖完整包围盒 8 个角点；实墙距镜头 2m 仍可见，中心瞄准区域保持空白。
+九剑使用真实战斗模型坐标，位置在肩背上方；部署数同步、九个唯一停靠位置、隐身和模型隐藏恢复通过。
+拳头基于实际手部网格和骨骼，idle/run/jump无运动尾迹，仅出拳窗口产生尾迹；逐动作烘焙顶点对齐误差小于1cm。
+小黑残影透明与网格释放、天剑落地时机、特效寿命清理、共享材质隔离均通过。
+
+数值结论：本轮保留伤害、冷却、等级成长、道具触发和生存数值；详见 docs/后期强度核对.md。
+验证边界：源码成长核算和上述游戏内检查；未覆盖长时间多人后期满屏压力及同装备循环实测TTK。
+截图无后期处理；回剑轨迹图为使用真实模型与槽位的构图夹具，不是多人网络回放。
+启动日志仍有原版 ProBuilder Shader Addressables 缺失记录；本轮模组检查无异常。
+
+发布：dist/LocalMods-XiaoHeiDaGeHeJi-0.5.15.zip
+安装：r2modman kiku / LocalMods-XiaoHeiDaGeHeJi 0.5.15
+备份：.tools/backups/kiku-before-0.5.15
+测试 DLL、发布 ZIP 内 DLL、已安装 DLL 字节完全一致。
+DLL SHA256：103ee11b5c2e1e88a92d250f15856bf6352e3dd122d9e5fafe72ea9422452ec7
+ZIP 仅含 manifest.json、README.md、icon.png、plugins/RiftSurvivor.dll；未包含测试插件。
+
+通过项目：
+1. Addressable shaders
+2. Additive skill HUD preserves vanilla icon
+3. Visible sword counter
+4. Azure sword mesh and trail
+5. Gold seal
+6. Seeker mesh and trail
+7. Chinese HUD font
+8. Effect XiaoheiPistolStreak
+9. Effect XiaoheiReplayStreak
+10. Effect XiaoheiAmberRound
+11. Effect JieGoldSwordBolt
+12. Effect JieFallingHeavenSword
+13. Own display RiftRunner
+14. Own display after first frame RiftRunner
+15. Hidden original body gear RiftRunner
+16. Own display Xiaohei
+17. Own display after first frame Xiaohei
+18. Hidden original body gear Xiaohei
+19. Own display JieGe
+20. Own display after first frame JieGe
+21. Hidden original body gear JieGe
+22. Own display WeiGe
+23. Own display after first frame WeiGe
+24. Hidden original body gear WeiGe
+25. Charge targeting, direct skill kill reset and server charge ledger
+26. Jie crosshair flight and balanced gravity
+27. Jie instant blink capsule collision
+28. Jie blink sword light and rings
+29. Jie blink effect cleanup
+30. Lobby materials stay separate and preserve emission
+31. Additive glow shader supports transparency
+32. Six distinct furniture meshes and damage profiles
+33. Giant gold fist and celestial sword immortal
+34. Ordinary movement has no automatic VFX emitter
+35. Networked spectacle catalog and lightning
+36. Spectacle lifetime cleanup
+37. Furniture slow and bleed are server owned
+38. Cui native barrier gain, uppercut and two health cap
+39. Cui native barrier holds in combat and slowly decays out of combat
+40. Cui pump reductions and charging guard multiply
+41. Cui charge scaling and one-use server windup permit
+42. Cui instant team heal includes self, distant ally and excludes enemy/dead
+43. Cui fists bind to a bodyless authored display
+44. Cui gold skin preserves actual hand geometry and native visibility registration
+45. Cui idle, run and jump keep fists lit without movement trails
+46. Cui jab, hook and uppercut illuminate only their striking hand
+47. Cui death and native invisibility hide all fist effects
+48. Cui fist registration recovers after cloaking and a renderer-list rebuild
+49. Cui fist component removal unregisters every owned renderer
+50. Nine sword reserve counts, unique docking sockets and cloak visibility
+51. Transparent soft materials share cached feather masks
+52. Local avatar ignores walls without mutating world materials
+53. Every combat burst has bounded particles and finite cleanup
+54. All burst renderers expire after the animation
+55. Local celestial avatar remains visible and clears crosshair
+56. Xiaohei echo uses a transparent authored pose with a smooth expiry
+57. Heaven sword shockwave starts on landing rather than cast
+58. Xiaohei echo frees its baked pose mesh on expiry
+59. Weapon art preview
+60. Spectacle rendered preview
+61. Combat VFX multi-frame GPU preview
+62. Actual hand glow animation GPU preview
+63. Nine sword reserve and local avatar GPU preview

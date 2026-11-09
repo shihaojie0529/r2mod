@@ -7,6 +7,7 @@ namespace RiftSurvivor
         private int hits, beforeMiss;
         private float deadline = float.NegativeInfinity;
         internal uint MissId { get; private set; }
+        internal int Hits => hits;
 
         internal bool Hit() => AddHits(1);
 

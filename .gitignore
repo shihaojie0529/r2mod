@@ -3,3 +3,6 @@ obj/
 .DS_Store
 __pycache__/
 *.blend1
+
+.tools/
+backups/

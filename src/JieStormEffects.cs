@@ -25,7 +25,7 @@ namespace RiftSurvivor
 
         private static GameObject Register(string name, JieStormVisualKind kind)
         {
-            var prefab = PrefabAPI.CreateEmptyPrefab(name, false);
+            var prefab = CombatVisuals.EffectPrefab(name);
             prefab.AddComponent<EffectComponent>().applyScale = false;
             var attributes = prefab.AddComponent<VFXAttributes>();
             attributes.DoNotPool = true;
@@ -73,7 +73,7 @@ namespace RiftSurvivor
             float angle = sign * ((index / 6) + .5f) * 12.5f * Mathf.Deg2Rad;
             var spoke = right * Mathf.Sin(angle) + Vector3.up * Mathf.Cos(angle);
             position = body.corePosition - forward * (.58f + .16f * tier)
-                + Vector3.up * -.12f + spoke * (1.23f + .52f * tier);
+                + Vector3.up * 1.0f + spoke * (3.1f + 1.05f * tier);
             rotation = Quaternion.LookRotation((spoke + forward * .17f).normalized, forward);
         }
 
@@ -91,6 +91,10 @@ namespace RiftSurvivor
             Stroke(symbol.transform, .027f, false, new Vector2(-.04f,.06f), new Vector2(.025f,0));
             Stroke(symbol.transform, .028f, false, new Vector2(-.13f,-.04f), new Vector2(.13f,-.04f),
                 new Vector2(.018f,-.15f), new Vector2(.06f,-.21f));
+            // Detached corner brackets frame the seal without covering its glyph.
+            foreach (int x in new[] { -1, 1 }) foreach (int y in new[] { -1, 1 })
+                Stroke(symbol.transform, .012f, false, new Vector2(x*.25f,y*.37f),
+                    new Vector2(x*.33f,y*.30f), new Vector2(x*.37f,y*.23f));
             return symbol;
         }
 
@@ -107,7 +111,7 @@ namespace RiftSurvivor
         {
             var line = new GameObject("GoldStroke").AddComponent<LineRenderer>();
             line.transform.SetParent(parent, false);
-            if (!lineMaterial) lineMaterial = new Material(Shader.Find("Sprites/Default")) { name = "JieGoldStroke" };
+            if (!lineMaterial) lineMaterial = CombatVisuals.Stroke("JieGoldStroke");
             line.sharedMaterial = lineMaterial;
             line.useWorldSpace = false;
             line.startWidth = line.endWidth = width;
@@ -115,6 +119,7 @@ namespace RiftSurvivor
             line.endColor = Gold;
             line.shadowCastingMode = ShadowCastingMode.Off;
             line.receiveShadows = false;
+            line.numCapVertices = line.numCornerVertices = 4;
             return line;
         }
     }
@@ -130,6 +135,7 @@ namespace RiftSurvivor
         private Vector3 start, endpoint;
         private float began, duration;
         private int discharged;
+        private bool impactShown;
 
         private void Start()
         {
@@ -148,13 +154,17 @@ namespace RiftSurvivor
             {
                 case JieStormVisualKind.Fan:
                     blades = new Transform[JieGoldVolley.WaveSize * JieGoldVolley.Waves];
-                    for (int i = 0; i < blades.Length; ++i) blades[i] = Sword(.80f);
+                    for (int i = 0; i < blades.Length; ++i) blades[i] = Sword(1.65f);
+                    var avatar = new GameObject("CelestialAvatarPresentation").transform;
+                    avatar.SetParent(transform, false);
+                    avatar.gameObject.AddComponent<JieCelestialAvatar>().Initialize(reference, began);
                     break;
                 case JieStormVisualKind.Bolt:
                     var victim = data.ResolveHurtBoxReference();
                     target = victim ? victim.GetComponent<HurtBox>() : null;
                     duration = Mathf.Max(.02f, data.genericFloat);
-                    prop = Sword(.90f);
+                    prop = Sword(1.8f);
+                    JieSwordArt.Trail(prop, new Color(1f,.78f,.27f), .26f, .22f);
                     break;
                 case JieStormVisualKind.Seal:
                     prop = JieStormEffects.MakeSeal().transform;
@@ -162,7 +172,7 @@ namespace RiftSurvivor
                     break;
                 case JieStormVisualKind.Heaven:
                     duration = Mathf.Max(1f, data.scale);
-                    prop = Sword(Mathf.Lerp(4.8f, 6.8f, Mathf.InverseLerp(8f, 12f, duration)));
+                    prop = Sword(Mathf.Lerp(14f, 19f, Mathf.InverseLerp(8f, 12f, duration)));
                     ring = JieStormEffects.Line(transform, .14f);
                     ring.loop = true;
                     ring.positionCount = 56;
@@ -174,6 +184,11 @@ namespace RiftSurvivor
                     break;
             }
             Animate();
+        }
+
+        private static void SkillSpectacleLocalDrop(Vector3 point, float radius)
+        {
+            RadiantGeometry.Flash(point, Quaternion.LookRotation(Vector3.up), JieStormEffects.Gold, radius, .75f);
         }
 
         private Transform Sword(float size)
@@ -195,6 +210,9 @@ namespace RiftSurvivor
                 case JieStormVisualKind.Fan:
                     if (!reference || !reference.healthComponent.alive || age >= JieGoldVolley.Duration) { Destroy(gameObject); return; }
                     if (blades == null) return;
+                    var facing = reference.inputBank ? Vector3.ProjectOnPlane(reference.inputBank.aimDirection, Vector3.up) : reference.transform.forward;
+                    if (facing.sqrMagnitude < .001f) facing = reference.transform.forward;
+                    transform.SetPositionAndRotation(reference.corePosition - facing.normalized * 3.5f - Vector3.up, Quaternion.LookRotation(facing));
                     while (discharged < blades.Length && age >= JieGoldVolley.ReleaseAt(discharged / JieGoldVolley.WaveSize))
                         blades[discharged++].gameObject.SetActive(false);
                     for (int i = discharged; i < blades.Length; ++i)
@@ -220,11 +238,21 @@ namespace RiftSurvivor
                     break;
                 case JieStormVisualKind.Heaven:
                     if (!prop) return;
+                    if(!impactShown && age>=JieStormEffects.DropTime)
+                    {
+                        impactShown=true;
+                        SkillSpectacleLocalDrop(start,duration);
+                    }
                     float plunge = Mathf.Clamp01(age / JieStormEffects.DropTime);
-                    prop.SetPositionAndRotation(start + Vector3.up * Mathf.Lerp(14f, .32f * prop.localScale.z, plunge * plunge),
+                    prop.SetPositionAndRotation(start + Vector3.up * Mathf.Lerp(28f, .79f * prop.localScale.z, plunge * plunge),
                         Quaternion.LookRotation(Vector3.down, Vector3.forward));
                     float pulse = Mathf.Clamp01((age - JieStormEffects.DropTime) / .32f);
                     ring.enabled = pulse > 0f;
+                    var waveColor = JieStormEffects.Gold;
+                    waveColor.a = (1f - pulse) * (1f - pulse);
+                    ring.startColor = ring.endColor = waveColor;
+                    ring.widthMultiplier = 1f - pulse * .75f;
+                    if (pulse > .15f) prop.localScale *= Mathf.Max(0f, 1f - Time.deltaTime * 7f);
                     ring.transform.localScale = Vector3.one * Mathf.Max(.01f, duration * pulse);
                     if (age >= JieStormEffects.DropTime + .35f) Destroy(gameObject);
                     break;

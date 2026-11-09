@@ -31,7 +31,7 @@ namespace RiftSurvivor
 
         internal static void Register()
         {
-            effect = PrefabAPI.CreateEmptyPrefab("WeiDinnerForFour", false);
+            effect = CombatVisuals.EffectPrefab("WeiDinnerForFour");
             effect.AddComponent<EffectComponent>().applyScale = false;
             var attributes = effect.AddComponent<VFXAttributes>();
             attributes.vfxPriority = VFXAttributes.VFXPriority.Always;

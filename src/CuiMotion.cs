@@ -56,6 +56,7 @@ namespace RiftSurvivor
         private static Dictionary<string, Clip> library;
         private CuiRig rig;
         private CuiGear gear;
+        private CuiFistGlow fistGlow;
         private CharacterBody body, presentedBody, pendingBottle;
         private float bottleRelease;
         private Transform[] bones;
@@ -117,6 +118,9 @@ namespace RiftSurvivor
             gear = GetComponent<CuiGear>();
             if (!gear) gear = gameObject.AddComponent<CuiGear>();
             gear.Bind(rig, renderer, model);
+            fistGlow = GetComponent<CuiFistGlow>();
+            if (!fistGlow) fistGlow = gameObject.AddComponent<CuiFistGlow>();
+            fistGlow.Bind(rig, renderer, model, body);
             if (pendingBottle && Now - bottleRelease < .25f)
                 gear.Throw(pendingBottle, Mathf.Max(0, bottleRelease - Now));
             pendingBottle = null;
@@ -200,6 +204,7 @@ namespace RiftSurvivor
             if (dying && death.name == null)
             {
                 gear.Show("", 1f, Quaternion.identity, Quaternion.identity);
+                fistGlow.Show("death", 1f);
                 return;
             }
             if (!dying)
@@ -255,6 +260,7 @@ namespace RiftSurvivor
             plate = Prop(shown, "Plate", t, previousPlate, blendPlate ? blend : 1f);
             shaker = Prop(shown, "Shaker", t, previousShaker, blendShaker ? blend : 1f);
             gear.Show(shown.name, t, plate, shaker);
+            fistGlow.Show(shown.name, t);
         }
 
         private static bool IsLeg(string name) => name.EndsWith("Leg", StringComparison.Ordinal)
@@ -355,6 +361,7 @@ namespace RiftSurvivor
         {
             ClearCues();
             if (gear) gear.Show("", 1f, Quaternion.identity, Quaternion.identity);
+            if (fistGlow) fistGlow.Show("", 1f);
             sampledPosition = sampledHealth = moving = false;
             horizontalSpeed = airborneTime = landingUntil = 0f;
             shown = locomotion = null;

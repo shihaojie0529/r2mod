@@ -175,6 +175,7 @@ namespace RiftSurvivor
             caster = owner;
             seal = locked;
             started = Time.fixedTime;
+            CombatStatusHud.Storm(owner);
             JieStormEffects.OpenFan(owner);
             if (seal) JieStormEffects.Lock(seal.healthComponent.body);
         }
