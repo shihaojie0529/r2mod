@@ -1,4 +1,6 @@
-# 小黑大哥合集 · 0.5.17
+# 小黑大哥合集 · 0.5.18
+
+0.5.18 将崔哥、小黑、杰哥和伟哥的初始攻速统一提高至原来的 10 倍，初始移速提高至原来的 5 倍：崔哥 40 米/秒、小黑 37.5 米/秒、杰哥和伟哥 35 米/秒。
 
 0.5.17 修正小黑大招：现在只有一个留在施放位置的十五米巨型发光分身，身体、背轮、地面光阵和实际枪口属于同一对象，不再保留小分身加镜头法相的双重表现。分身持续 4 秒，自动索敌周围 60 米内可见敌人，目标死亡或被地形遮挡时自动转火。基础 18 发，每层高光增加 6 发，满层 36 发；每发 250% 伤害、冷却 10 秒。本人可自由移动和射击。
 
@@ -51,8 +53,8 @@
 ## 用 r2modman 安装或更新
 
 1. 选择 **Risk of Rain 2** 并打开一个配置。在 **Online** 中安装 **bbepis 的 BepInExPack** 和 **RiskofThunder 的 R2API_Core、R2API_ContentManagement、R2API_Prefab、R2API_Language**，同时安装管理器提示的依赖。
-2. 退出游戏，在配置的 **Settings** 中搜索 **local mod**，选择 **Import local mod**（部分版本叫 **Install local mod**），直接选 `LocalMods-XiaoHeiDaGeHeJi-0.5.15.zip`。如果配置中装过旧包名 `RiftSurvivor`，先在 **Installed** 移除旧包，再导入新包。
-3. 在 **Installed** 确认 **XiaoHeiDaGeHeJi 0.5.15** 已启用，点击 **Start modded**。联机时，房主和所有玩家都更新到同一版本。
+2. 退出游戏，在配置的 **Settings** 中搜索 **local mod**，选择 **Import local mod**（部分版本叫 **Install local mod**），直接选 `LocalMods-XiaoHeiDaGeHeJi-0.5.18.zip`。如果配置中装过旧包名 `RiftSurvivor`，先在 **Installed** 移除旧包，再导入新包。
+3. 在 **Installed** 确认 **XiaoHeiDaGeHeJi 0.5.18** 已启用，点击 **Start modded**。联机时，房主和所有玩家都更新到同一版本。
 
 ## 全员隐藏飞行
 

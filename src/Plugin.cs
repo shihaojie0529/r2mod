@@ -6,7 +6,7 @@ using R2API.Utils;
 
 namespace RiftSurvivor
 {
-    [BepInPlugin("local.r2mod.riftsurvivor", "小黑大哥合集", "0.5.17")]
+    [BepInPlugin("local.r2mod.riftsurvivor", "小黑大哥合集", "0.5.18")]
     [BepInDependency(R2APIContentManager.PluginGUID)]
     [BepInDependency(PrefabAPI.PluginGUID)]
     [BepInDependency(LanguageAPI.PluginGUID)]

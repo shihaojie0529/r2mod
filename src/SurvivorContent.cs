@@ -26,7 +26,8 @@ namespace RiftSurvivor
             character.portraitIcon = SurvivorArt.Portrait;
             character.baseMaxHealth = 140f;
             character.levelMaxHealth = 42f;
-            character.baseMoveSpeed = 8f;
+            character.baseMoveSpeed = 8f * 5f;
+            character.baseAttackSpeed = 10f;
             CuiVitals.Install(body);
             body.AddComponent<DirectSkillKillReset>().slot = SkillSlot.Utility;
             SurvivorSkills.Configure(body);
@@ -63,11 +64,11 @@ namespace RiftSurvivor
             character.levelMaxHealth = healthGrowth;
             character.baseDamage = 12f;
             character.levelDamage = 2.4f;
-            character.baseMoveSpeed = moveSpeed;
+            character.baseMoveSpeed = moveSpeed * 5f;
             character.levelMoveSpeed = 0f;
             character.baseRegen = 1f;
             character.levelRegen = .2f;
-            character.baseAttackSpeed = 1f;
+            character.baseAttackSpeed = 10f;
             character.levelAttackSpeed = 0f;
             character.baseArmor = character.levelArmor = 0f;
             character.baseCrit = 1f;
