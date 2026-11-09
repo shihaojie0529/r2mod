@@ -236,6 +236,7 @@ namespace RiftSurvivor
             WeiBonds.DirectHit(owner, hurt.healthComponent, point, DinnerStrike.Sword);
             XiaoheiBallistics.HitTarget(owner, hurt.healthComponent, hurt, owner.damage * 1.6f, crit, DamageTypeCombo.GenericPrimary);
             HitFlash(point, heading);
+            NarutoFx.Emit(NarutoEffect.MinatoSpark, point, heading, 1f, .3f, owner.gameObject, .06f);
             return true;
         }
 
@@ -302,6 +303,8 @@ namespace RiftSurvivor
             XiaoheiBallistics.HitTarget(owner, victim, hurt, owner.damage * 1.8f, crit, DamageTypeCombo.GenericSecondary, resetSecondary: true);
             JieBonds.OnRecallHit(owner, victim, point);
             HitFlash(point, transform.forward);
+            // Nine swords can converge on one enemy; one Senko cut per enemy per beat.
+            NarutoFx.Emit(NarutoEffect.SenkoSlash, point, transform.forward, 1.2f, 1f, victim.gameObject, .12f);
         }
 
         private static void HitFlash(Vector3 point, Vector3 heading)

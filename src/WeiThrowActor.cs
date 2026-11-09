@@ -342,7 +342,11 @@ namespace RiftSurvivor
             if (struck) Direct(struck.healthComponent, struck, impact.point);
             if (cargo != Cargo.Enemy) FurnitureCatalog.Burst(owner, struck ? struck.healthComponent : null, impact.point, damage, crit, Furniture);
             if (victim && victim.alive) Direct(victim, passenger.mainHurtBox, transform.position);
-            if (cargo == Cargo.Enemy) { NetworkServer.Destroy(gameObject); return; }
+            if (cargo == Cargo.Enemy)
+            {
+                NarutoFx.Emit(NarutoEffect.Impact, impact.point, Vector3.zero, 1.6f, 1.4f, owner ? owner.gameObject : null, .1f);
+                NetworkServer.Destroy(gameObject); return;
+            }
             if (!struck && impact.normal.y > .48f) Rest(impact.point);
             else StartFalling();
         }

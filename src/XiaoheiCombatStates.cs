@@ -78,7 +78,8 @@ namespace RiftSurvivor
             FireCue("Play_commando_R", aim);
             if (!NetworkServer.active) return;
             var shot = XiaoheiBallistics.Fire(characterBody, aim, XiaoheiBallistics.Muzzle(characterBody),
-                2.2f, DamageTypeCombo.GenericPrimary, XiaoheiCombat.PistolTracer, personalShot: true);
+                2.2f, DamageTypeCombo.GenericPrimary, XiaoheiCombat.PistolTracer, personalShot: true,
+                fx: NarutoEffect.SasukeSpark, fxScale: 1f, fxShake: .25f, fxInterval: .06f);
             combat.PrimaryResult(shot.landed);
         }
     }

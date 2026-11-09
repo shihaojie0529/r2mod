@@ -26,8 +26,10 @@ namespace RiftSurvivor
         // A charge reuses its hit set between casts; a punch gets a fresh set.
         internal static bool Sweep(CharacterBody body, Vector3 origin, Vector3 direction,
             float reach, float radius, float coefficient, float force, DamageTypeCombo type,
-            bool crit, HashSet<HealthComponent> touched, bool triggerCover = false, bool resetOnKill = false)
+            bool crit, HashSet<HealthComponent> touched, bool triggerCover = false, bool resetOnKill = false,
+            NarutoEffect fx = NarutoEffect.None, float fxScale = 1f, float fxShake = 0f, float fxInterval = 0f)
         {
+            Vector3 firstContact = default;
             var attack = new BulletAttack
             {
                 owner = body.gameObject, weapon = body.gameObject, origin = origin,
@@ -69,7 +71,9 @@ namespace RiftSurvivor
                 bool keepGoing;
                 try { keepGoing = nativeHit(shot, ref hit); }
                 finally { DirectSkillKillReset.Forget(directHit); directHit = null; }
-                landed |= !health || !health.alive || health.combinedHealth + health.barrier < before;
+                bool damaged = !health || !health.alive || health.combinedHealth + health.barrier < before;
+                if (damaged && !landed) firstContact = contact;
+                landed |= damaged;
                 if (triggerCover && health)
                     (coverTargets ??= new List<HealthComponent>()).Add(health);
                 return keepGoing;
@@ -79,6 +83,7 @@ namespace RiftSurvivor
             if (coverTargets != null)
                 foreach (var target in coverTargets) XiaoheiCombat.OnCuiImpact(body, target);
             if (landed && contactSound) EffectManager.SimpleSoundEffect(contactSound.index, origin, true);
+            if (landed) NarutoFx.Emit(fx, firstContact, direction, fxScale, fxShake, body.gameObject, fxInterval);
             return landed;
         }
 
@@ -86,6 +91,13 @@ namespace RiftSurvivor
         {
             float radius = heavy ? 8f : 6f;
             SkillSpectacle.Emit(SpectacleKind.Slam, body.footPosition, Vector3.up, radius);
+            // The overhead slam lands as a Tailed Beast Bomb on a scorched crater.
+            if (heavy)
+            {
+                NarutoFx.Emit(NarutoEffect.TailedBeastBomb, body.footPosition, Vector3.zero, 2.2f, 3.5f);
+                NarutoFx.Emit(NarutoEffect.Crater, body.footPosition, Vector3.zero, 2.4f);
+            }
+            else NarutoFx.Emit(NarutoEffect.Slam, body.footPosition, Vector3.zero, 2.4f, 2f);
             var result = new BlastAttack
             {
                 attacker = body.gameObject, inflictor = body.gameObject, teamIndex = body.teamComponent.teamIndex,

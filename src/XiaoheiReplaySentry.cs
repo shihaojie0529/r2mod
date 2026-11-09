@@ -43,6 +43,7 @@ namespace RiftSurvivor
             NetworkServer.Spawn(go);
             CombatStatusHud.Replay(body);
             SkillSpectacle.Emit(SpectacleKind.Replay, go.transform.position + Vector3.up, aim.direction, 4f);
+            NarutoFx.Emit(NarutoEffect.Chidori, go.transform.position + Vector3.up, Vector3.zero, 3f, 2f);
             return go;
         }
         private static Quaternion Facing(Vector3 direction)
@@ -93,7 +94,8 @@ namespace RiftSurvivor
                 var origin = Muzzle;
                 var direction = (point-origin).normalized;
                 XiaoheiBallistics.Fire(owner,new Ray(origin,direction),origin,2.5f,
-                    DamageTypeCombo.GenericSpecial,XiaoheiCombat.EchoTracer);
+                    DamageTypeCombo.GenericSpecial,XiaoheiCombat.EchoTracer,
+                    fx:NarutoEffect.BoltImpact,fxScale:1.4f,fxShake:1f,fxInterval:.05f);
                 if (XiaoheiCombat.MuzzleFlash)
                     EffectManager.SpawnEffect(XiaoheiCombat.MuzzleFlash,new EffectData {
                         origin=origin,rotation=Util.QuaternionSafeLookRotation(direction),scale=2f },true);
