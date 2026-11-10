@@ -107,7 +107,7 @@ public partial class Smoke
                     foreach(var t in root.GetComponentsInChildren<Transform>(true))t.gameObject.layer=0;
                 }finally{if(root && tile!=3)DestroyImmediate(root);}
             }
-            atlas.Apply();File.WriteAllBytes("D:/project/r2mod/dist/requested-vfx-0.5.17.png",atlas.EncodeToPNG());
+            atlas.Apply();File.WriteAllBytes("D:/project/r2mod/mods/XiaoHeiDaGeHeJi/dist/requested-vfx-0.5.17.png",atlas.EncodeToPNG());
         }finally{RenderTexture.active=previous;camera.targetTexture=null;target.Release();resolved.Release();DestroyImmediate(target);DestroyImmediate(resolved);DestroyImmediate(atlas);DestroyImmediate(camObject);}
     }
 }
