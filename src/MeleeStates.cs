@@ -153,7 +153,9 @@ namespace RiftSurvivor
                 characterBody.corePosition + Aim * .85f, Aim, third ? 1.8f : 1.3f);
             if (MeleeCombat.Sweep(characterBody, characterBody.corePosition, Aim,
                 third ? 3.3f : 3f, third ? 1.25f : 1.05f, third ? 3f : 1.6f, third ? 560f : 120f,
-                DamageTypeCombo.GenericPrimary, RollCrit(), new HashSet<HealthComponent>()))
+                DamageTypeCombo.GenericPrimary, RollCrit(), new HashSet<HealthComponent>(),
+                fx: third ? NarutoEffect.Rasengan : NarutoEffect.HitSpark, fxScale: third ? 1.1f : 1f,
+                fxShake: third ? 1.6f : .35f, fxInterval: third ? .15f : .06f))
                 CuiVitals.PunchHit(characterBody, third);
         }
 
@@ -346,7 +348,9 @@ namespace RiftSurvivor
             {
                 var direction = travelled.sqrMagnitude > 0.0001f ? travelled.normalized : chargeDirection;
                 MeleeCombat.Sweep(characterBody, previousCore, direction, distance + 0.95f,
-                    1.1f, DamageCoefficient(heldSeconds), Mathf.Lerp(1000f,2200f,heldSeconds / CuiChargeWindup.MaxHold), DamageTypeCombo.GenericUtility, crit, victims, triggerCover: true, resetOnKill: true);
+                    1.1f, DamageCoefficient(heldSeconds), Mathf.Lerp(1000f,2200f,heldSeconds / CuiChargeWindup.MaxHold), DamageTypeCombo.GenericUtility, crit, victims, triggerCover: true, resetOnKill: true,
+                    fx: NarutoEffect.Roar, fxScale: Mathf.Lerp(1f, 2f, heldSeconds / CuiChargeWindup.MaxHold),
+                    fxShake: Mathf.Lerp(1f, 2.5f, heldSeconds / CuiChargeWindup.MaxHold), fxInterval: .2f);
             }
             previousCore = current;
             return true;

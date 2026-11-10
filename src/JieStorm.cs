@@ -136,6 +136,11 @@ namespace RiftSurvivor
             if (Time.fixedTime < arrives) return;
             enabled = false;
             if (NetworkServer.active && caster)
+            {
+                NarutoFx.Emit(NarutoEffect.GoldBurst, point, Vector3.zero, radius / 4f, 3.5f);
+                NarutoFx.Emit(NarutoEffect.RasenShuriken, point, Vector3.zero, radius / 5f);
+            }
+            if (NetworkServer.active && caster)
                 new BlastAttack
                 {
                     attacker = caster.gameObject, inflictor = caster.gameObject, teamIndex = caster.teamComponent.teamIndex,
@@ -268,6 +273,8 @@ namespace RiftSurvivor
                     WeiBonds.DirectHit(caster, shot.target.healthComponent, shot.endpoint, DinnerStrike.Sword);
                     XiaoheiBallistics.HitTarget(caster, shot.target.healthComponent, shot.target, caster.damage * 2f,
                         caster.RollCrit(), DamageTypeCombo.GenericSpecial);
+                    NarutoFx.Emit(NarutoEffect.SixPathsSpark, shot.endpoint, shot.endpoint - shot.from, 1.3f, .6f,
+                        shot.target.healthComponent.gameObject, .1f);
                 }
                 active.RemoveAt(i--);
             }

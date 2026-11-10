@@ -1,4 +1,6 @@
-# 小黑大哥合集 · 0.5.18
+# 小黑大哥合集 · 0.5.19
+
+0.5.19 借用火影合集（NarutoCollection，作者 Zerneas）的招式特效：崔哥连拳出疾风传打击火花，上勾拳炸螺旋丸，重砸是尾兽玉配焦土坑，满蓄冲撞带九尾咆哮冲击；小黑开枪出佐助打击火花，追踪弹命中劈麒麟雷，巨型分身每发都是雷遁冲击；杰哥飞剑出水门打击火花，「剑来」回程每只怪挨一道飞雷神斩，万剑归宗金剑出六道火花，天剑落地炸六道金色爆发加螺旋手里剑；伟哥椅子冲击波、沙发螺旋丸、餐桌再不斩斩击、冰箱白的冰镜碎裂、落地灯千鸟、衣柜重砸，抛怪命中也有冲击。重击附带镜头震动，轻击按频率和同屏数量限流。特效素材不随本包分发：需同时安装 NarutoCollection，未安装时只保留原有特效，不影响游戏。伤害与机制不变。
 
 0.5.18 将崔哥、小黑、杰哥和伟哥的初始攻速统一提高至原来的 10 倍，初始移速提高至原来的 5 倍：崔哥 40 米/秒、小黑 37.5 米/秒、杰哥和伟哥 35 米/秒。
 
@@ -54,7 +56,7 @@
 
 1. 选择 **Risk of Rain 2** 并打开一个配置。在 **Online** 中安装 **bbepis 的 BepInExPack** 和 **RiskofThunder 的 R2API_Core、R2API_ContentManagement、R2API_Prefab、R2API_Language**，同时安装管理器提示的依赖。
 2. 退出游戏，在配置的 **Settings** 中搜索 **local mod**，选择 **Import local mod**（部分版本叫 **Install local mod**），直接选 `LocalMods-XiaoHeiDaGeHeJi-0.5.18.zip`。如果配置中装过旧包名 `RiftSurvivor`，先在 **Installed** 移除旧包，再导入新包。
-3. 在 **Installed** 确认 **XiaoHeiDaGeHeJi 0.5.18** 已启用，点击 **Start modded**。联机时，房主和所有玩家都更新到同一版本。
+3. 在 **Installed** 确认 **XiaoHeiDaGeHeJi 0.5.19** 已启用，点击 **Start modded**。联机时，房主和所有玩家都更新到同一版本。
 
 ## 全员隐藏飞行
 

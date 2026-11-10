@@ -46,7 +46,8 @@ namespace RiftSurvivor
         // Use native bullet processing for falloff, weak points, collision and
         // item procs. The tracer starts at the visible gun, the ray at the reticle.
         internal static (bool landed, HealthComponent victim, Vector3 point) Fire(CharacterBody body,
-            Ray ray, Vector3 muzzle, float coefficient, DamageTypeCombo type, GameObject tracer, bool personalShot = false, bool resetSecondary = false)
+            Ray ray, Vector3 muzzle, float coefficient, DamageTypeCombo type, GameObject tracer, bool personalShot = false, bool resetSecondary = false,
+            NarutoEffect fx = NarutoEffect.None, float fxScale = 1f, float fxShake = 0f, float fxInterval = 0f)
         {
             var attack = new BulletAttack
             {
@@ -91,6 +92,7 @@ namespace RiftSurvivor
             };
             attack.Fire();
             Trace(tracer, muzzle, end);
+            if (hitEnemy) NarutoFx.Emit(fx, hitPoint, -ray.direction, fxScale, fxShake, body.gameObject, fxInterval);
             return (hitEnemy, victim, hitPoint);
         }
 
@@ -138,7 +140,7 @@ namespace RiftSurvivor
             // Some shootable enemies have no search bullseye. An unlocked round
             // still travels straight and can earn its mark on an actual impact.
             var result = Fire(body, aim, muzzle, 5.5f, DamageTypeCombo.GenericSecondary, XiaoheiCombat.SeekerEffect,
-                personalShot: true, resetSecondary: true);
+                personalShot: true, resetSecondary: true, fx: NarutoEffect.Kirin, fxScale: 1.2f, fxShake: 1.8f);
             combat.SeekerResult(result.victim, result.landed, miss, afterCup, result.point);
         }
     }
@@ -171,6 +173,7 @@ namespace RiftSurvivor
                 XiaoheiBallistics.HitTarget(shooter, health, target, damage, crit, DamageTypeCombo.GenericSecondary, resetSecondary: true);
                 WeiBonds.TryCatch(shooter, health, point);
                 SkillSpectacle.Emit(SpectacleKind.Seeker,point,Vector3.up,1.9f);
+                NarutoFx.Emit(NarutoEffect.Kirin, point, Vector3.zero, 1.2f, 1.8f);
             }
             combat.SeekerResult(health, hit, miss, afterCup, point);
         }
@@ -212,7 +215,8 @@ namespace RiftSurvivor
         {
             var direction = XiaoheiBallistics.ReplayDirection(body, aim, origin);
             XiaoheiBallistics.Fire(body, new Ray(origin, direction), origin, 2.5f,
-                DamageTypeCombo.GenericSpecial, XiaoheiCombat.EchoTracer);
+                DamageTypeCombo.GenericSpecial, XiaoheiCombat.EchoTracer,
+                fx: NarutoEffect.Chidori, fxScale: .9f, fxShake: .5f, fxInterval: .08f);
             fired++;
         }
     }

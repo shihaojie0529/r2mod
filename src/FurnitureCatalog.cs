@@ -39,12 +39,26 @@ namespace RiftSurvivor
                     break;
             }
         }
+        // One borrowed Naruto effect per furniture, matched to its status effect.
+        private static void ImpactJutsu(CharacterBody owner, Vector3 point, FurnitureKind kind)
+        {
+            switch(kind)
+            {
+                case FurnitureKind.Chair: NarutoFx.Emit(NarutoEffect.Impact,point,Vector3.zero,1f,.6f,owner.gameObject,.1f); break;
+                case FurnitureKind.Sofa: NarutoFx.Emit(NarutoEffect.Rasengan,point,Vector3.zero,1.6f,1.4f,owner.gameObject,.1f); break;
+                case FurnitureKind.Table: NarutoFx.Emit(NarutoEffect.Cut,point,Vector3.zero,1.6f,.6f,owner.gameObject,.1f); break;
+                case FurnitureKind.Fridge: NarutoFx.Emit(NarutoEffect.Shatter,point,Vector3.zero,1.4f,.6f,owner.gameObject,.1f); break;
+                case FurnitureKind.Lamp: NarutoFx.Emit(NarutoEffect.Chidori,point,Vector3.zero,1.2f,.8f,owner.gameObject,.1f); break;
+                case FurnitureKind.Wardrobe: NarutoFx.Emit(NarutoEffect.Slam,point,Vector3.zero,1.8f,1.8f,owner.gameObject,.1f); break;
+            }
+        }
         // Secondary damage has a lower proc coefficient and cannot recurse through
         // the thrown-object path. One enemy's multiple hurtboxes count only once.
         internal static void Burst(CharacterBody owner, HealthComponent direct, Vector3 point, float damage, bool crit, FurnitureKind kind)
         {
             if (!NetworkServer.active || !owner) return;
             SkillSpectacle.Emit(SpectacleKind.Furniture,point,Vector3.up,kind==FurnitureKind.Sofa?4f:1.8f, (uint)kind);
+            ImpactJutsu(owner,point,kind);
             if(kind!=FurnitureKind.Sofa && kind!=FurnitureKind.Lamp) return;
             var unique=new HashSet<HealthComponent>();
             if(direct) unique.Add(direct);
