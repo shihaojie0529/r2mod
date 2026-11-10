@@ -8,4 +8,4 @@ __pycache__/
 backups/
 
 # Install packages are published as GitHub Releases.
-dist/*.zip
+mods/*/dist/*.zip
