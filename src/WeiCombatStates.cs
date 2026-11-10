@@ -136,7 +136,7 @@ namespace RiftSurvivor
         protected override SkillSlot Slot => SkillSlot.Special;
         protected override void Begin()
         {
-            if (NetworkServer.active) Combat.SelectAll(Aim);
+            if (NetworkServer.active) Combat.SummonSwarm(Aim);
             else if (isAuthority) Combat.AwaitReceipt(true);
         }
     }

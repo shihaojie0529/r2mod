@@ -163,15 +163,19 @@ namespace RiftSurvivor
         }
 
         internal const float Duration = 6f;
-        internal const int WaveSize = 6, Waves = 6;
-        internal static float ReleaseAt(int wave) => .30f + wave;
-        private readonly List<Shot> active = new List<Shot>(WaveSize);
+        internal const int Swords = 100, FanBlades = 12;
+        // One steady stream from 0.3s to 5.3s; the longest flight still lands inside Duration.
+        internal static float ReleaseAt(int sword) => .30f + 5f * sword / (Swords - 1);
+        // Every sword leaves from one of the few visible blades. The offset makes
+        // the last FanBlades swords use slots 0..11 in order, as those blades vanish.
+        internal static int FanSlot(int sword) => (sword + FanBlades - Swords % FanBlades) % FanBlades;
+        private readonly List<Shot> active = new List<Shot>(32);
         private readonly List<HurtBox> targets = new List<HurtBox>();
         private readonly HashSet<HealthComponent> distinct = new HashSet<HealthComponent>();
         private CharacterBody caster;
         private HurtBox seal;
         private float started, searchTime = float.NegativeInfinity;
-        private int nextWave, nextTarget;
+        private int nextSword, nextTarget;
         private bool hasHit;
         private Vector3 lastHit;
 
@@ -232,7 +236,7 @@ namespace RiftSurvivor
                 shot.endpoint = shot.hitsWorld ? hit.point : aim.GetPoint(JieStorm.Range);
             }
             float travel = Mathf.Clamp(Vector3.Distance(from, shot.endpoint) / 105f, .07f, .58f);
-            // Final-wave replacements still land inside the six-second cast window.
+            // Late retargets still land inside the six-second cast window.
             shot.arrives = Mathf.Min(shot.fired + travel, started + Duration);
             JieStormEffects.Launch(from, shot.endpoint, target, Mathf.Max(.02f, shot.arrives - shot.fired));
         }
@@ -241,17 +245,12 @@ namespace RiftSurvivor
         {
             if (!caster || !caster.healthComponent.alive) { Destroy(this); return; }
             float elapsed = Time.fixedTime - started;
-            while (nextWave < Waves && elapsed >= ReleaseAt(nextWave))
+            while (nextSword < Swords && elapsed >= ReleaseAt(nextSword))
             {
-                for (int i = 0; i < WaveSize; ++i)
-                {
-                    int index = WaveSize * nextWave + i;
-                    JieStormEffects.FanPose(caster, index, out var from, out _);
-                    var shot = new Shot();
-                    Aim(shot, from, ChooseTarget());
-                    active.Add(shot);
-                }
-                nextWave++;
+                JieStormEffects.FanPose(caster, FanSlot(nextSword++), out var from, out _);
+                var shot = new Shot();
+                Aim(shot, from, ChooseTarget());
+                active.Add(shot);
             }
             for (int i = 0; i < active.Count; ++i)
             {
@@ -278,7 +277,7 @@ namespace RiftSurvivor
                 }
                 active.RemoveAt(i--);
             }
-            if (elapsed < Duration || active.Count != 0 || nextWave < Waves) return;
+            if (elapsed < Duration || active.Count != 0 || nextSword < Swords) return;
             enabled = false;
             if (XiaoheiBallistics.IsLiveEnemy(caster, seal)) JieStorm.HeavenSword(caster, seal.transform.position, 12f, 18f);
             else if (hasHit) JieStorm.HeavenSword(caster, lastHit, 12f, 18f);

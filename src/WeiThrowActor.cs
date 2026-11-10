@@ -11,14 +11,12 @@ namespace RiftSurvivor
     // carrying, release, portal travel and its first (and only) damaging impact.
     public sealed class WeiThrowActor : NetworkBehaviour
     {
-        private enum Mode : byte { Held, Flying, Falling, Grounded, Reserved, Done }
+        private enum Mode : byte { Held, Flying, Falling, Grounded, Done }
         private enum Cargo : byte { Chair, Sofa, Enemy, Table, Fridge, Lamp, Wardrobe }
         private FurnitureKind Furniture => cargo == Cargo.Sofa ? FurnitureKind.Sofa : cargo == Cargo.Table ? FurnitureKind.Table : cargo == Cargo.Fridge ? FurnitureKind.Fridge : cargo == Cargo.Lamp ? FurnitureKind.Lamp : cargo == Cargo.Wardrobe ? FurnitureKind.Wardrobe : FurnitureKind.Chair;
         private static GameObject prefab;
         private static readonly List<WeiThrowActor> actors = new List<WeiThrowActor>();
-        private static readonly List<WeiThrowActor> onGround = new List<WeiThrowActor>();
         private static readonly Dictionary<HealthComponent, WeiThrowActor> claimed = new Dictionary<HealthComponent, WeiThrowActor>();
-        internal static IReadOnlyList<WeiThrowActor> Grounded => onGround;
         private Mode mode;
         private Cargo cargo;
         private CharacterBody owner, passenger;
@@ -29,6 +27,7 @@ namespace RiftSurvivor
         private bool wasKinematic;
         private Vector3 centerToRoot;
         private HurtBox target;
+        private WeiCombat seeker;
         private Vector3 heading;
         private float damage, radius, ends, fallSpeed, blockedUntil;
         private bool crit, hand, spawned;
@@ -45,8 +44,6 @@ namespace RiftSurvivor
 
         internal bool CanRelease => mode == Mode.Held && passenger && health && health.alive;
         internal HealthComponent Passenger => health;
-        internal bool CanSelect(CharacterBody caster) => isActiveAndEnabled && mode == Mode.Grounded &&
-            Time.fixedTime < ends && ownerTeam == caster.teamComponent.teamIndex;
         private TeamIndex ownerTeam;
         internal static bool Occupied(HealthComponent victim) => claimed.TryGetValue(victim, out var prop) && prop;
 
@@ -106,23 +103,7 @@ namespace RiftSurvivor
             NetworkServer.Spawn(gameObject);
         }
 
-        internal bool ReserveFurniture(CharacterBody caster)
-        {
-            if (!CanSelect(caster)) return false;
-            mode = Mode.Reserved;
-            onGround.Remove(this);
-            return true;
-        }
-
-        internal void UndoReservation()
-        {
-            if (mode != Mode.Reserved) return;
-            if (cargo == Cargo.Enemy || Time.fixedTime >= ends) { Cancel(); return; }
-            mode = Mode.Grounded;
-            onGround.Add(this);
-        }
-
-        internal static WeiThrowActor GrabMob(CharacterBody caster, CharacterBody mob, bool carry)
+        internal static WeiThrowActor GrabMob(CharacterBody caster, CharacterBody mob)
         {
             if (!WeiCombat.Grabbable(caster, mob)) return null;
             var actor = Make(caster, mob.corePosition, Cargo.Enemy);
@@ -131,15 +112,11 @@ namespace RiftSurvivor
             actor.mobId = mob.netId;
             actor.centerToRoot = mob.transform.position - mob.corePosition;
             actor.radius = Mathf.Clamp(mob.radius * .72f, .20f, .84f);
-            actor.hand = carry;
+            actor.hand = true;
             claimed.Add(actor.health, actor);
-            if (carry)
-            {
-                actor.SuspendPassenger();
-                actor.FollowHand();
-                actor.Spawn();
-            }
-            else actor.mode = Mode.Reserved;
+            actor.SuspendPassenger();
+            actor.FollowHand();
+            actor.Spawn();
             return actor;
         }
 
@@ -206,10 +183,9 @@ namespace RiftSurvivor
             SetDirtyBit(1);
         }
 
-        internal void Launch(CharacterBody caster, WeiAim aim, float coefficient, DamageTypeCombo type, bool slam, uint selectionBatch)
+        internal void Launch(CharacterBody caster, WeiAim aim, float coefficient, DamageTypeCombo type, bool slam, uint selectionBatch, WeiCombat retargetFrom = null)
         {
-            onGround.Remove(this);
-            if (cargo == Cargo.Enemy && mode == Mode.Reserved) SuspendPassenger();
+            seeker = retargetFrom;
             owner = caster;
             ownerId = caster.netId;
             ownerTeam = caster.teamComponent.teamIndex;
@@ -251,11 +227,13 @@ namespace RiftSurvivor
                 if (cargo == Cargo.Enemy) Cancel(); else StartFalling();
                 return;
             }
+            if (seeker && !XiaoheiBallistics.IsLiveEnemy(owner, target)) target = seeker.NextSwarmTarget();
             if (target && XiaoheiBallistics.IsLiveEnemy(owner, target))
             {
                 var delta = target.transform.position - transform.position;
+                // Swarm pieces may switch target mid-air; the tighter turn stops them orbiting it.
                 if (delta.sqrMagnitude > .001f)
-                    heading = Vector3.RotateTowards(heading, delta.normalized, 4.3f * Time.fixedDeltaTime, 0f).normalized;
+                    heading = Vector3.RotateTowards(heading, delta.normalized, (seeker ? 14f : 4.3f) * Time.fixedDeltaTime, 0f).normalized;
             }
             float step = (cargo == Cargo.Enemy ? 32f : 38f) * Time.fixedDeltaTime;
             Travel(step);
@@ -327,7 +305,6 @@ namespace RiftSurvivor
             var hurt = col ? col.GetComponent<HurtBox>() : null;
             if (!XiaoheiBallistics.IsLiveEnemy(owner, hurt) || hurt.healthComponent == health ||
                 Physics.Linecast(from, point, LayerIndex.world.mask, QueryTriggerInteraction.Ignore)) return;
-            if (batch != 0 && claimed.TryGetValue(hurt.healthComponent, out var peer) && peer.batch == batch) return;
             best = new Contact { hurt = hurt, distance = distance, point = point };
         }
 
@@ -416,7 +393,6 @@ namespace RiftSurvivor
             transform.position = floor + Vector3.up * (FurnitureCatalog.HalfHeight(Furniture));
             mode = Mode.Grounded;
             ends = Time.fixedTime + 6f;
-            onGround.Add(this);
             SetDirtyBit(1);
         }
 
@@ -425,7 +401,6 @@ namespace RiftSurvivor
             if (mode == Mode.Done) return;
             mode = Mode.Done;
             RestorePassenger();
-            onGround.Remove(this);
             if (spawned) NetworkServer.Destroy(gameObject);
             else Destroy(gameObject);
         }
@@ -490,7 +465,6 @@ namespace RiftSurvivor
         private void OnDisable()
         {
             actors.Remove(this);
-            onGround.Remove(this);
             // NetworkServer.active may already be false during scene teardown.
             // Client replicas carry only IDs and have no local passenger to restore.
             RestorePassenger();

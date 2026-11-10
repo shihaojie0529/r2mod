@@ -17,7 +17,7 @@ namespace RiftSurvivor
 
         internal static void Register()
         {
-            fan = Register("JieThirtySixSwords", JieStormVisualKind.Fan);
+            fan = Register("JieGoldSwordFan", JieStormVisualKind.Fan);
             bolt = Register("JieGoldSwordBolt", JieStormVisualKind.Bolt);
             seal = Register("JieGoldTargetSeal", JieStormVisualKind.Seal);
             heaven = Register("JieFallingHeavenSword", JieStormVisualKind.Heaven);
@@ -66,11 +66,10 @@ namespace RiftSurvivor
             if (forward.sqrMagnitude < .001f) forward = body.transform.forward;
             forward.Normalize();
             var right = Vector3.Cross(Vector3.up, forward);
-            // Three nested pairs leave in each volley. The outermost pairs frame
-            // the silhouette until the last wave even when the wearer strafes.
+            // Two rows of three nested pairs: the small fan the whole stream leaves from.
             int tier = index % 3;
             float sign = (index / 3) % 2 == 0 ? -1f : 1f;
-            float angle = sign * ((index / 6) + .5f) * 12.5f * Mathf.Deg2Rad;
+            float angle = sign * ((index / 6) + .5f) * 30f * Mathf.Deg2Rad;
             var spoke = right * Mathf.Sin(angle) + Vector3.up * Mathf.Cos(angle);
             position = body.corePosition - forward * (.58f + .16f * tier)
                 + Vector3.up * 1.0f + spoke * (3.1f + 1.05f * tier);
@@ -153,7 +152,7 @@ namespace RiftSurvivor
             switch (kind)
             {
                 case JieStormVisualKind.Fan:
-                    blades = new Transform[JieGoldVolley.WaveSize * JieGoldVolley.Waves];
+                    blades = new Transform[JieGoldVolley.FanBlades];
                     for (int i = 0; i < blades.Length; ++i) blades[i] = Sword(1.65f);
                     var avatar = new GameObject("CelestialAvatarPresentation").transform;
                     avatar.SetParent(transform, false);
@@ -213,7 +212,7 @@ namespace RiftSurvivor
                     var facing = reference.inputBank ? Vector3.ProjectOnPlane(reference.inputBank.aimDirection, Vector3.up) : reference.transform.forward;
                     if (facing.sqrMagnitude < .001f) facing = reference.transform.forward;
                     transform.SetPositionAndRotation(reference.corePosition - facing.normalized * 3.5f - Vector3.up, Quaternion.LookRotation(facing));
-                    while (discharged < blades.Length && age >= JieGoldVolley.ReleaseAt(discharged / JieGoldVolley.WaveSize))
+                    while (discharged < blades.Length && age >= JieGoldVolley.ReleaseAt(JieGoldVolley.Swords - JieGoldVolley.FanBlades + discharged))
                         blades[discharged++].gameObject.SetActive(false);
                     for (int i = discharged; i < blades.Length; ++i)
                     {

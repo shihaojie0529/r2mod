@@ -9,9 +9,9 @@ namespace RiftSurvivor
             Add("JIEGE_NAME", "Jie Ge", "杰哥", "傑哥");
             Add("JIEGE_SUBTITLE", "The Wandering Sword Rider", "御剑散人", "御劍散人");
             Add("JIEGE_DESCRIPTION",
-                "Ride your sword past the enemy line. Plant jade blades in enemies or terrain, then turn their return paths through the crowd. A golden seal lets you direct all thirty-six blades of Sword Tempest at one target.",
-                "脚踏本命剑，从敌群侧翼绕过去。出鞘的青剑会留在敌人身上或地形中，站好位置再喊一声「剑来」，就能让回剑沿途穿过整排敌人。准星对出金印时开大，三十六柄金剑就会追向同一目标。",
-                "腳踏本命劍，從敵群側翼繞過去。出鞘的青劍會留在敵人身上或地形中，站好位置再喊一聲「劍來」，就能讓回劍沿途穿過整排敵人。準星對出金印時開大，三十六柄金劍就會追向同一目標。");
+                "Ride your sword past the enemy line. Plant jade blades in enemies or terrain, then turn their return paths through the crowd. A golden seal lets you direct all one hundred blades of Sword Tempest at one target.",
+                "脚踏本命剑，从敌群侧翼绕过去。出鞘的青剑会留在敌人身上或地形中，站好位置再喊一声「剑来」，就能让回剑沿途穿过整排敌人。准星对出金印时开大，一百柄金剑就会追向同一目标。",
+                "腳踏本命劍，從敵群側翼繞過去。出鞘的青劍會留在敵人身上或地形中，站好位置再喊一聲「劍來」，就能讓回劍沿途穿過整排敵人。準星對出金印時開大，一百柄金劍就會追向同一目標。");
             Add("JIEGE_OUTRO", "...and so he left, counting his blades back into their case.",
                 "……于是他离开了，数着回到匣中的最后几柄剑。", "……於是他離開了，數著回到匣中的最後幾柄劍。");
             Add("JIEGE_OUTRO_FAILURE", "...and so he vanished, his sword still waiting below.",
@@ -38,9 +38,9 @@ namespace RiftSurvivor
                 "沿飛行方向瞬間閃現 16 公尺，無移動輸入時朝準星閃現。遇牆停在牆前，留下青白劍光與殘劍，結束時踏劍懸停。冷卻 2 秒。");
             Add("JIEGE_STORM_NAME", "Sword Tempest", "万剑归宗", "萬劍歸宗");
             Add("JIEGE_STORM_DESC",
-                "Over 6s, launch six waves of six golden swords for <style=cIsDamage>200% damage per sword</style>. Aim at a golden seal within 60m to focus all waves. Without a living marked target, blades spread to nearby enemies. Finish with a heavenly sword for <style=cIsDamage>1800% damage</style> within 12m. Cooldown 24s.",
-                "身后展开三十六柄金剑，6 秒内分六轮射出，每柄造成<style=cIsDamage>200% 伤害</style>。对准 60 米内敌人的金印开大即可集火，朝空处开大或目标阵亡则分头追敌。收尾天剑对 12 米内敌人造成<style=cIsDamage>1800% 伤害</style>。冷却 24 秒。",
-                "身後展開三十六柄金劍，6 秒內分六輪射出，每柄造成<style=cIsDamage>200% 傷害</style>。對準 60 公尺內敵人的金印開大即可集火，朝空處開大或目標陣亡則分頭追敵。收尾天劍對 12 公尺內敵人造成<style=cIsDamage>1800% 傷害</style>。冷卻 24 秒。");
+                "Launch 100 golden swords in a steady 5s stream for <style=cIsDamage>200% damage per sword</style>. They auto-target visible enemies within 60m and switch when one dies. Aim at a golden seal to focus them all on it. Finish with a heavenly sword for <style=cIsDamage>1800% damage</style> within 12m. Cooldown 24s.",
+                "一百柄金剑从身后连续飞出，5 秒内放完，每柄造成<style=cIsDamage>200% 伤害</style>，自动锁定周身 60 米内的可见敌人，目标阵亡时自动转火。对准敌人的金印开大即可集火。收尾天剑对 12 米内敌人造成<style=cIsDamage>1800% 伤害</style>。冷却 24 秒。",
+                "一百柄金劍從身後連續飛出，5 秒內放完，每柄造成<style=cIsDamage>200% 傷害</style>，自動鎖定周身 60 公尺內的可見敵人，目標陣亡時自動轉火。對準敵人的金印開大即可集火。收尾天劍對 12 公尺內敵人造成<style=cIsDamage>1800% 傷害</style>。冷卻 24 秒。");
         }
     }
 }

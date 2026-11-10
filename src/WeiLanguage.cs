@@ -36,9 +36,9 @@ namespace RiftSurvivor
                 "沿準星移動最多 20 公尺，遇牆停在牆前。起點與出口在 3 秒內雙向互通，隊友、家具和拋出的小怪也能穿門。冷卻 7 秒。");
             Add("WEIGE_SELECT_NAME", "Select All", "全选", "全選");
             Add("WEIGE_SELECT_DESC",
-                "Select up to 6 visible small enemies or grounded furniture near the reticle within 40m and throw them together. Furniture deals <style=cIsDamage>400% base damage</style>, modified by its type and keeping its special effect. Thrown enemies deal 600% on impact. Keeps Fat Burn. Cooldown 18s on a successful throw.",
-                "框起准星附近 40 米内的普通怪和落地家具，最多 6 个，一起投出。每件家具以<style=cIsDamage>400% 基础伤害</style>乘自身倍率，并保留专属效果，每只怪按 600% 碰撞结算。保留燃脂，成功投出后冷却 18 秒。",
-                "框起準星附近 40 公尺內的普通怪和落地家具，最多 6 個，一起投出。每件家具以<style=cIsDamage>400% 基礎傷害</style>乘自身倍率，並保留專屬效果，每隻怪按 600% 碰撞結算。保留燃脂，成功投出後冷卻 18 秒。");
+                "Summon 100 furniture over 2s. They auto-target visible enemies within 60m, spread across them, and switch targets when one dies. Each deals <style=cIsDamage>400% base damage</style>, modified by its type and keeping its special effect. Works with no enemies in sight. Keeps Fat Burn. Cooldown 18s.",
+                "2 秒内召唤 100 件家具，自动锁定周身 60 米内的可见敌人并平均分配，目标阵亡时自动转火。每件以<style=cIsDamage>400% 基础伤害</style>乘自身倍率，并保留专属效果。没有敌人也能施放。保留燃脂，冷却 18 秒。",
+                "2 秒內召喚 100 件家具，自動鎖定周身 60 公尺內的可見敵人並平均分配，目標陣亡時自動轉火。每件以<style=cIsDamage>400% 基礎傷害</style>乘自身倍率，並保留專屬效果。沒有敵人也能施放。保留燃脂，冷卻 18 秒。");
             Add("WEIGE_DOOR_STEP", "Today's steps +1", "今日步数 +1", "今日步數 +1");
             Add("WEIGE_FLIGHT_ON", "Flight enabled", "准星飞行已开启", "準星飛行已開啟");
             Add("WEIGE_FLIGHT_OFF", "Flight disabled", "准星飞行已关闭", "準星飛行已關閉");

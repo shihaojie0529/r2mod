@@ -51,10 +51,12 @@ namespace RiftSurvivor
         private struct Candidate
         {
             internal CharacterBody mob;
-            internal WeiThrowActor furniture;
-            internal float angle, distance;
+            internal float distance;
         }
 
+        private const int SwarmSize = 100;
+        // Spread over two seconds so a guest's client never receives 100 spawns in one tick.
+        private const float SwarmPerSecond = 50f;
         private static BuffDef pasteReceipt, selectReceipt;
         private static uint nextBatch;
         private CharacterBody body;
@@ -70,7 +72,11 @@ namespace RiftSurvivor
         private GameObject preview;
         private HurtBox previewTarget;
         private readonly List<Candidate> selection = new List<Candidate>();
-        private readonly List<WeiThrowActor> reserved = new List<WeiThrowActor>(6);
+        private readonly List<HurtBox> swarmTargets = new List<HurtBox>();
+        private int swarmLeft, swarmIndex, swarmCursor;
+        private float swarmCredit, nextSwarmScan;
+        private uint swarmBatch;
+        private Ray swarmAim;
 
         // A held button can outlast a missed grab or a monster killed in hand.
         internal bool Carrying => NetworkServer.active ? held && held.CanRelease : WeiThrowActor.HeldBy(body);
@@ -114,10 +120,16 @@ namespace RiftSurvivor
             if (flat.sqrMagnitude < .5f) flat = owner.transform.forward;
             var offset = flat * (owner.radius + radius + .42f) + Vector3.Cross(Vector3.up, flat) * .34f
                 + Vector3.up * (.52f + .25f * radius);
-            var ray = new Ray(owner.corePosition, offset.normalized);
+            return ClearOf(owner.corePosition, offset, radius);
+        }
+
+        // Stops short of terrain so a new object never starts inside a wall.
+        private static Vector3 ClearOf(Vector3 center, Vector3 offset, float radius)
+        {
+            var ray = new Ray(center, offset.normalized);
             if (Physics.SphereCast(ray, radius, out var wall, offset.magnitude, LayerIndex.world.mask, QueryTriggerInteraction.Ignore))
                 return ray.GetPoint(Mathf.Max(0f, wall.distance - .06f));
-            return owner.corePosition + offset;
+            return center + offset;
         }
 
         internal bool Deliver(Ray ray, float interval, HurtBox automaticTarget = null)
@@ -162,11 +174,11 @@ namespace RiftSurvivor
         private static bool Line(Vector3 from, Vector3 to) =>
             !Physics.Linecast(from, to, LayerIndex.world.mask, QueryTriggerInteraction.Ignore);
 
-        private void Collect(WeiAim aim, bool group)
+        private void Collect(WeiAim aim)
         {
             selection.Clear();
             Vector3 center = body.corePosition;
-            float range = group ? 40f : 25f;
+            const float range = 25f;
             var boxed = aim.target ? aim.target.healthComponent.body : null;
             Candidate fallback = default;
             foreach (var mob in CharacterBody.readOnlyInstancesList)
@@ -176,40 +188,25 @@ namespace RiftSurvivor
                 var delta = point - center;
                 float distance = delta.sqrMagnitude;
                 if (distance > range * range || !Line(body.aimOrigin, point)) continue;
-                float dot = Vector3.Dot(aim.ray.direction, (point - aim.ray.origin).normalized);
-                if (group && dot < .7071068f) continue;
-                var value = new Candidate { mob = mob, distance = distance, angle = 1f - dot };
+                var value = new Candidate { mob = mob, distance = distance };
                 if (mob == boxed) fallback = value;
                 else selection.Add(value);
             }
-            if (group)
-            {
-                foreach (var prop in WeiThrowActor.Grounded)
-                {
-                    if (!prop || !prop.CanSelect(body)) continue;
-                    var point = prop.transform.position;
-                    float distance = (point - center).sqrMagnitude;
-                    float dot = Vector3.Dot(aim.ray.direction, (point - aim.ray.origin).normalized);
-                    if (distance <= range * range && dot >= .7071068f && Line(body.aimOrigin, point))
-                        selection.Add(new Candidate { furniture = prop, angle = 1f - dot, distance = distance });
-                }
-            }
             if (selection.Count == 0 && fallback.mob) selection.Add(fallback);
-            if (group) selection.Sort((a,b) => a.angle == b.angle ? a.distance.CompareTo(b.distance) : a.angle.CompareTo(b.angle));
-            else selection.Sort((a,b) => a.distance.CompareTo(b.distance));
+            selection.Sort((a,b) => a.distance.CompareTo(b.distance));
         }
 
         internal void Cut(Ray ray)
         {
             if (held || body.skillLocator.secondary.stock < 1) return;
             var aim = WeiAim.Resolve(body, ray, null);
-            Collect(aim, false);
+            Collect(aim);
             if (selection.Count == 0) return;
             var mob = selection[0].mob;
             initialSlam = aim.target && aim.target.healthComponent.body == mob;
             grabAim = ray;
             grabbedAt = Time.fixedTime;
-            held = WeiThrowActor.GrabMob(body, mob, true);
+            held = WeiThrowActor.GrabMob(body, mob);
         }
 
         internal void Paste(Ray ray)
@@ -224,42 +221,58 @@ namespace RiftSurvivor
             prop.Launch(body, aim, WeiVitals.TrySpend(body) ? 7.5f : 6f, DamageTypeCombo.GenericSecondary, slam, 0);
         }
 
-        internal void SelectAll(Ray ray)
+        // Needs no target: the cast always goes off unless the last swarm is still leaving.
+        internal void SummonSwarm(Ray ray)
         {
-            var aim = WeiAim.Resolve(body, ray, held ? held.Passenger : null);
-            Collect(aim, true);
-            if (selection.Count == 0) return;
-            // Reserve actual objects before spending. A failed cast leaves a
-            // sofa's six-second clock alone and never moves or stuns a monster.
-            try
+            if (swarmLeft > 0 || !TryPay(true)) return;
+            SkillSpectacle.Emit(SpectacleKind.SelectAll, body.footPosition + Vector3.up * .12f, Vector3.up, 4.5f);
+            swarmBatch = ++nextBatch;
+            if (swarmBatch == 0) swarmBatch = ++nextBatch;
+            swarmAim = ray;
+            swarmLeft = SwarmSize;
+            swarmIndex = 0;
+            swarmCredit = 1f;
+            nextSwarmScan = 0f;
+        }
+
+        private void AdvanceSwarm()
+        {
+            if (!body.healthComponent.alive) { swarmLeft = 0; return; }
+            swarmCredit += Time.fixedDeltaTime * SwarmPerSecond;
+            for (; swarmCredit >= 1f && swarmLeft > 0; swarmCredit -= 1f, swarmLeft--)
             {
-                foreach (var item in selection)
+                var kind = (FurnitureKind)(swarmIndex % FurnitureCatalog.Count);
+                // A golden-angle spiral keeps consecutive pieces apart around Wei Ge.
+                var offset = Quaternion.AngleAxis(swarmIndex * 137.508f, Vector3.up) * Vector3.forward * (2.5f + swarmIndex % 4 * 1.2f)
+                    + Vector3.up * (1.5f + swarmIndex % 5 * .9f);
+                swarmIndex++;
+                var aim = new WeiAim { ray = swarmAim, target = NextSwarmTarget() };
+                var prop = WeiThrowActor.MakeFurnitureKind(body, ClearOf(body.corePosition, offset, FurnitureCatalog.Radius(kind)), kind);
+                prop.Launch(body, aim, 4f, DamageTypeCombo.GenericSpecial, false, swarmBatch, this);
+            }
+        }
+
+        // Deals the visible enemies out in turn; furniture in flight also calls
+        // this when its target dies, so the scan is cached across all 100 pieces.
+        internal HurtBox NextSwarmTarget()
+        {
+            if (Time.fixedTime >= nextSwarmScan)
+            {
+                nextSwarmScan = Time.fixedTime + .15f;
+                swarmTargets.Clear();
+                foreach (var candidate in CharacterBody.readOnlyInstancesList)
                 {
-                    var prop = item.furniture;
-                    if (prop)
-                    {
-                        if (!prop.ReserveFurniture(body)) continue;
-                    }
-                    else prop = WeiThrowActor.GrabMob(body, item.mob, false);
-                    if (prop) reserved.Add(prop);
-                    if (reserved.Count == 6) break;
-                }
-                if (reserved.Count == 0 || !TryPay(true)) return;
-                SkillSpectacle.Emit(SpectacleKind.SelectAll, body.footPosition + Vector3.up * .12f, Vector3.up, 4.5f);
-                uint batch = ++nextBatch;
-                if (batch == 0) batch = ++nextBatch;
-                foreach (var prop in reserved)
-                {
-                    SkillSpectacle.Selection(body.corePosition, prop.transform.position);
-                    bool slam = prop.Passenger && aim.target && prop.Passenger == aim.target.healthComponent;
-                    prop.Launch(body, aim, prop.Passenger ? 6f : 4f, DamageTypeCombo.GenericSpecial, slam, batch);
+                    var hurt = candidate ? candidate.mainHurtBox : null;
+                    if (hurt && WeiAutoFire.Valid(body, hurt)) swarmTargets.Add(hurt);
                 }
             }
-            finally
+            for (int tries = swarmTargets.Count; tries > 0; tries--)
             {
-                foreach (var prop in reserved) if (prop) prop.UndoReservation();
-                reserved.Clear();
+                swarmCursor = (swarmCursor + 1) % swarmTargets.Count;
+                var hurt = swarmTargets[swarmCursor];
+                if (XiaoheiBallistics.IsLiveEnemy(body, hurt)) return hurt;
             }
+            return null;
         }
 
         private bool TryPay(bool special)
@@ -291,6 +304,7 @@ namespace RiftSurvivor
 
         private void FixedUpdate()
         {
+            if (NetworkServer.active && swarmLeft > 0) AdvanceSwarm();
             if (NetworkServer.active && held)
             {
                 var state = body.skillLocator.secondary.stateMachine.state;
