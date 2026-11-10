@@ -1,0 +1,9 @@
+{
+  "name": "GearPanel",
+  "version_number": "0.1.0",
+  "website_url": "",
+  "description": "对局中按 F6 打开面板，由房主为任意玩家增加、减少、设定或移除道具，并更换或卸下主动装备。其他玩家无需安装。",
+  "dependencies": [
+    "bbepis-BepInExPack-5.4.2122"
+  ]
+}
