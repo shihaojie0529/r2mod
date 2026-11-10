@@ -19,7 +19,11 @@ namespace RiftSurvivor
         private IPhysMotor physicsMotor;
         private EntityStateMachine main, slide, utilityLane;
         private bool controlling, restoreRigidGravity;
+        private float steeredSpeed;
         private static bool registered;
+
+        internal const float SpeedMultiplier = 2.2f;
+        internal static float Speed(CharacterBody body) => body.moveSpeed * SpeedMultiplier;
 
         internal static void Register()
         {
@@ -89,8 +93,10 @@ namespace RiftSurvivor
             if (bodyAction && (main.IsInInitialState() || main.state is StunState || main.state is FrozenState ||
                                main.state is GenericCharacterDeath || main.state is GenericCharacterSpawnState)) return true;
             // A stationary shot may occupy Body too. Yield to a velocity-driven lunge,
-            // not to the mere presence of a firing state on that lane.
-            if (bodyAction && motor && motor.velocity.sqrMagnitude > body.moveSpeed * body.moveSpeed * 1.32f) return true;
+            // not to the mere presence of a firing state on that lane. Flight's own
+            // velocity from the previous tick is not a lunge.
+            float cruise = Mathf.Max(body.moveSpeed, steeredSpeed);
+            if (bodyAction && motor && motor.velocity.sqrMagnitude > cruise * cruise * 1.32f) return true;
             if (motor && motor.disableAirControlUntilCollision) return true;
             if (motor && motor.rootMotion.sqrMagnitude > .000001f)
             {
@@ -132,7 +138,7 @@ namespace RiftSurvivor
             // Clear only ordinary ground-walk motion. Leave the initial take-off displacement intact.
             if (canSteer && motor && body.rootMotionInMainState) motor.rootMotion = Vector3.zero;
             SetControl(canSteer);
-            if (!canSteer) return;
+            if (!canSteer) { steeredSpeed = 0f; return; }
 
             Vector3 direction = Vector3.zero;
             if (CanReadKeys(owner))
@@ -143,7 +149,8 @@ namespace RiftSurvivor
                 direction = FlightDirection(body.inputBank.aimDirection, cam ? cam.transform.right : transform.right,
                     move.y, move.x);
             }
-            var velocity = direction * body.moveSpeed;
+            var velocity = direction * Speed(body);
+            steeredSpeed = velocity.magnitude;
             if (motor)
             {
                 motor.moveDirection = direction;
@@ -220,6 +227,7 @@ namespace RiftSurvivor
         {
             if (body) body.onSkillActivatedAuthority -= SkillStarted;
             utilityLane = null;
+            steeredSpeed = 0f;
             SetControl(false);
             owner = null;
         }

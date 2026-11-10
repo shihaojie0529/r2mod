@@ -21,7 +21,7 @@ namespace RiftSurvivor
                 "Every 3 consecutive primary hits grant <style=cIsUtility>1 Highlight</style> (up to 3) and advance the current blink recharge by 1s. You may switch targets. A miss resets the streak and preserves earned stacks.",
                 "左键每连续命中 3 发，获得 <style=cIsUtility>1 层高光</style>，并使当前一层闪现充能提前 1 秒。最多 3 层，可以换目标。打空会中断连击，保留已有高光。",
                 "左鍵每連續命中 3 發，獲得 <style=cIsUtility>1 層高光</style>，並使當前一層閃現充能提前 1 秒。最多 3 層，可以換目標。打空會中斷連擊，保留已有高光。");
-            Add("XIAOHEI_PISTOL_NAME", "I've Got the Angle", "我架枪了", "我架槍了");
+            Add("XIAOHEI_PISTOL_NAME", "I've Got the Angle", "我架这呢你放心", "我架這呢你放心");
             Add("XIAOHEI_PISTOL_DESC",
                 "Hold to fire 3 energy rounds per second for <style=cIsDamage>220% damage</style> each. Accurate in midair.",
                 "按住光能手枪，每秒连射 3 发，每发造成<style=cIsDamage>220% 伤害</style>。空中也能稳定射击。",
@@ -36,7 +36,7 @@ namespace RiftSurvivor
                 "Tap to blink 12m in your movement direction. Your first blink leaves an afterimage for 3s. Hold while it remains to return for free, even at zero stock. Stores 2 charges, recharging one every 2s.",
                 "点按朝移动方向闪现 12 米，可在空中连闪。首次闪现留下 3 秒残影。残影还在时长按可免费回位，充能耗尽也能回。最多 2 层，每 2 秒恢复 1 层。",
                 "點按朝移動方向閃現 12 公尺，可在空中連閃。首次閃現留下 3 秒殘影。殘影還在時長按可免費回位，充能耗盡也能回。最多 2 層，每 2 秒恢復 1 層。");
-            Add("XIAOHEI_REPLAY_NAME", "Roll the Old Clip", "放段以前的", "放段以前的");
+            Add("XIAOHEI_REPLAY_NAME", "Roll the Old Clip", "想我当年", "想我當年");
             Add("XIAOHEI_REPLAY_DESC",
                 "Leave a giant luminous replay at your cast location for 4s. It automatically targets visible enemies within 60m and fires 18 rounds for <style=cIsDamage>250% damage</style> each. Spend all Highlight for 6 extra rounds per stack, up to 36. You remain free to fire, slide and blink. Cooldown 10s.",
                 "在施放位置留下持续 4 秒的巨型发光分身，自动锁定周围 60 米内可见敌人，连射 18 发，每发<style=cIsDamage>250% 伤害</style>。消耗全部高光，每层多打 6 发，满层共 36 发。目标死亡或失去视线后自动换目标。本人仍可开枪、侧滑和闪现。冷却 10 秒。",

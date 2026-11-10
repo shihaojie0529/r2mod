@@ -125,7 +125,7 @@ namespace RiftSurvivor
             if (HiddenFlight.IsEnabled(body)) return;
             var movement = FlightDirection(body);
             motor.moveDirection = movement;
-            motor.velocity = movement * body.moveSpeed;
+            motor.velocity = movement * HiddenFlight.Speed(body);
         }
 
         internal static Vector3 FlightDirection(CharacterBody owner)

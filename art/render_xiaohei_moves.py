@@ -19,10 +19,10 @@ from xiaohei_reel_fx import Effects
 
 SHOTS = [
     ("ready", "举枪瞄准", 22),
-    ("pistol", "我架枪了 · 三连射", 24),
+    ("pistol", "我架这呢你放心 · 三连射", 24),
     ("seeker", "这波马了 · 侧滑追踪", 25),
     ("blink", "卡了卡了 · 闪现回位", 30),
-    ("replay", "放段以前的 · 分身连射", 40),
+    ("replay", "想我当年 · 分身连射", 40),
     ("settle", "收枪", 18),
 ]
 TARGET = Vector((-.06, -2.10, 1.39))

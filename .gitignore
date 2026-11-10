@@ -6,3 +6,6 @@ __pycache__/
 
 .tools/
 backups/
+
+# Install packages are published as GitHub Releases.
+dist/*.zip

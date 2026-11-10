@@ -113,7 +113,7 @@ namespace RiftSurvivor
 
     public sealed class ComboPunch : TimedMeleeStrike, SteppedSkillDef.IStepSetter
     {
-        private sealed class Rhythm { public float next, resetAt; public int expected; }
+        private sealed class Rhythm { public RemoteCadence cadence; public float resetAt; public int expected; }
         private static readonly ConditionalWeakTable<CharacterBody, Rhythm> RemoteRhythms =
             new ConditionalWeakTable<CharacterBody, Rhythm>();
         private byte step;
@@ -127,19 +127,16 @@ namespace RiftSurvivor
             {
                 var rhythm = RemoteRhythms.GetValue(characterBody, _ => new Rhythm());
                 float now = Time.fixedTime;
-                // Permit modest packet bunching without granting a faster sustained
-                // attack rate. A reset to jab is safe; a client cannot skip to uppercut.
-                const float jitter = .09f;
-                if (rhythm.next > now + jitter) Accepted = false;
+                // A reset to jab is safe; a client cannot skip to uppercut.
+                int claimed = step == 0 || now >= rhythm.resetAt ? 0 : rhythm.expected;
+                float interval = Mathf.Max(Time.fixedDeltaTime * 2f,
+                    (claimed == 2 ? .48f : .32f) / Mathf.Max(.1f, attackSpeedStat));
+                if (!rhythm.cadence.TryAccept(now, interval)) Accepted = false;
                 else
                 {
-                    if (step == 0 || now >= rhythm.resetAt) rhythm.expected = 0;
-                    step = (byte)rhythm.expected;
+                    step = (byte)claimed;
                     rhythm.expected = (step + 1) % 3;
-                    float interval = Mathf.Max(Time.fixedDeltaTime * 2f,
-                        (step == 2 ? .48f : .32f) / Mathf.Max(.1f, attackSpeedStat));
-                    rhythm.next = Mathf.Max(rhythm.next, now - jitter) + interval;
-                    rhythm.resetAt = now + 1.25f + jitter;
+                    rhythm.resetAt = now + 1.25f + (float)RemoteCadence.Allowance;
                 }
             }
             if (step == 2) BeginStrike("uppercut", 0.48f, 1f/3f);
@@ -150,9 +147,9 @@ namespace RiftSurvivor
         {
             bool third = step == 2;
             SkillSpectacle.Emit(third ? SpectacleKind.Uppercut : SpectacleKind.Punch,
-                characterBody.corePosition + Aim * .85f, Aim, third ? 1.8f : 1.3f);
+                characterBody.corePosition + Aim * 2.8f, Aim, third ? 6f : 4.4f);
             if (MeleeCombat.Sweep(characterBody, characterBody.corePosition, Aim,
-                third ? 3.3f : 3f, third ? 1.25f : 1.05f, third ? 3f : 1.6f, third ? 560f : 120f,
+                third ? 11f : 10f, third ? 4.2f : 3.5f, third ? 3f : 1.6f, third ? 560f : 120f,
                 DamageTypeCombo.GenericPrimary, RollCrit(), new HashSet<HealthComponent>(),
                 fx: third ? NarutoEffect.Rasengan : NarutoEffect.HitSpark, fxScale: third ? 1.1f : 1f,
                 fxShake: third ? 1.6f : .35f, fxInterval: third ? .15f : .06f))

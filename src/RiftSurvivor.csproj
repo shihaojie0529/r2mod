@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <Version>0.5.19</Version>
+    <Version>0.5.24</Version>
     <!-- Prefab registration can use the calling assembly's identity for network IDs. -->
     <AssemblyVersion>0.2.0.0</AssemblyVersion>
     <FileVersion>$(Version).0</FileVersion>

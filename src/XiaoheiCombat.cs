@@ -20,7 +20,7 @@ namespace RiftSurvivor
         private CharacterBody body;
         private readonly XiaoheiStreak streak = new XiaoheiStreak();
         private bool nextShotAfterCup;
-        private double nextPrimary;
+        private RemoteCadence remotePrimary;
 
         internal static void Register()
         {
@@ -82,16 +82,8 @@ namespace RiftSurvivor
 
         private void Awake() => body = GetComponent<CharacterBody>();
 
-        internal bool AcceptRemotePrimary(float interval)
-        {
-            // A remote owner can interrupt its own states. Preserve the sustained
-            // cadence while allowing occasional state packets to arrive in a batch.
-            double now = Time.fixedTimeAsDouble;
-            const double jitter = .09;
-            if (nextPrimary > now + jitter) return false;
-            nextPrimary = Math.Max(nextPrimary, now - jitter) + interval;
-            return true;
-        }
+        internal bool AcceptRemotePrimary(float interval) =>
+            remotePrimary.TryAccept(Time.fixedTimeAsDouble, interval);
 
         internal void PrimaryResult(bool landed)
         {

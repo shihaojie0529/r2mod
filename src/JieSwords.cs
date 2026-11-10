@@ -23,7 +23,7 @@ namespace RiftSurvivor
         private readonly List<JieAzureSword> planted = new List<JieAzureSword>(Capacity);
         private readonly HashSet<JieAzureSword> deployed = new HashSet<JieAzureSword>();
         private CharacterBody body;
-        private double nextPrimary;
+        private RemoteCadence remotePrimary;
         private bool awaitingReceipts;
         private int lastReceipt, nextFan, nextDock;
 
@@ -72,13 +72,7 @@ namespace RiftSurvivor
         internal void Launch(Ray aim, float interval)
         {
             if (!NetworkServer.active) return;
-            if (!body.hasEffectiveAuthority)
-            {
-                double now = Time.fixedTimeAsDouble;
-                const double jitter = .09;
-                if (nextPrimary > now + jitter) return;
-                nextPrimary = Math.Max(now - jitter, nextPrimary) + interval;
-            }
+            if (!body.hasEffectiveAuthority && !remotePrimary.TryAccept(Time.fixedTimeAsDouble, interval)) return;
             var target = FindTarget(body, aim, false);
             var sword = Instantiate(swordPrefab, aim.origin, Util.QuaternionSafeLookRotation(aim.direction));
             var actor = sword.GetComponent<JieAzureSword>();
@@ -275,7 +269,8 @@ namespace RiftSurvivor
 
             // Allow for movement between the press and the server's transform sample.
             // Root-motion dashes can cover 16 m even when the motor reports zero velocity.
-            float speed = Mathf.Max(characterBody.moveSpeed, characterMotor ? characterMotor.velocity.magnitude : 0f);
+            // The host cannot see the X flight toggle, so always allow for flight speed.
+            float speed = Mathf.Max(HiddenFlight.Speed(characterBody), characterMotor ? characterMotor.velocity.magnitude : 0f);
             float allowance = Mathf.Clamp(characterBody.radius + speed * .35f, 2f, 17f);
             var flight = GetComponent<JieFlight>();
             if (flight && flight.dashRecallUntil >= Time.fixedTime)

@@ -64,6 +64,7 @@ namespace RiftSurvivor
         private Ray grabAim;
         private float grabbedAt, previewAt;
         private double nextM1;
+        private RemoteCadence remoteM1;
         private int lastPaste, lastSelect;
         private bool trackPaste, trackSelect;
         private GameObject preview;
@@ -124,9 +125,14 @@ namespace RiftSurvivor
             // The same cadence covers a manual shot immediately following auto
             // fire (including if RMB interrupted its recovery), on host or guest.
             double now = Time.fixedTimeAsDouble;
-            double jitter = body.hasEffectiveAuthority ? .0001 : Math.Min(.09, interval * .20);
-            if (Carrying || nextM1 > now + jitter) return false;
-            nextM1 = Math.Max(nextM1, now - jitter) + interval;
+            if (Carrying) return false;
+            if (body.hasEffectiveAuthority)
+            {
+                const double rounding = .0001;
+                if (nextM1 > now + rounding) return false;
+                nextM1 = Math.Max(nextM1, now - rounding) + interval;
+            }
+            else if (!remoteM1.TryAccept(now, interval)) return false;
             WeiAim aim;
             Vector3 origin;
             if (automaticTarget)
