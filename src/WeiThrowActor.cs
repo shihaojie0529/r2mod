@@ -227,11 +227,15 @@ namespace RiftSurvivor
                 if (cargo == Cargo.Enemy) Cancel(); else StartFalling();
                 return;
             }
-            if (seeker && !XiaoheiBallistics.IsLiveEnemy(owner, target)) target = seeker.NextSwarmTarget();
+            if (seeker && !XiaoheiBallistics.IsLiveEnemy(owner, target))
+            {
+                target = seeker.NextSwarmTarget();
+                // Face a new target outright: at 38 m/s a piece could otherwise circle one beside it.
+                if (target) heading = Util.QuaternionSafeLookRotation(target.transform.position - transform.position) * Vector3.forward;
+            }
             if (target && XiaoheiBallistics.IsLiveEnemy(owner, target))
             {
                 var delta = target.transform.position - transform.position;
-                // Swarm pieces may switch target mid-air; the tighter turn stops them orbiting it.
                 if (delta.sqrMagnitude > .001f)
                     heading = Vector3.RotateTowards(heading, delta.normalized, (seeker ? 14f : 4.3f) * Time.fixedDeltaTime, 0f).normalized;
             }
