@@ -243,7 +243,7 @@ namespace RiftSurvivor
 
         private void FixedUpdate()
         {
-            if (!caster || !caster.healthComponent.alive) { Destroy(this); return; }
+            if (!DownedRescue.IsUp(caster)) { Destroy(this); return; }
             float elapsed = Time.fixedTime - started;
             while (nextSword < Swords && elapsed >= ReleaseAt(nextSword))
             {

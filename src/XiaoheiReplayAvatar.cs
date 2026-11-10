@@ -69,7 +69,7 @@ namespace RiftSurvivor
         }
         private void LateUpdate()
         {
-            if(!owner || !owner.healthComponent || !owner.healthComponent.alive){Destroy(gameObject);return;}
+            if(!DownedRescue.IsUp(owner)){Destroy(gameObject);return;}
             // Networked sentry owns the fixed ground anchor and aiming rotation. No camera projection.
             float age=Time.time-began;
             float envelope=Mathf.SmoothStep(0,1,age/.16f)*Mathf.SmoothStep(0,1,(XiaoheiReplaySentry.Duration-age)/.25f);

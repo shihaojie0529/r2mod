@@ -194,7 +194,7 @@ namespace RiftSurvivor
         {
             float now = Now;
             var health = body ? body.healthComponent : null;
-            bool dying = health ? !health.alive : dead;
+            bool dying = health ? !DownedRescue.IsUp(body) : dead;
             if (dying && !dead)
             {
                 dead = true;

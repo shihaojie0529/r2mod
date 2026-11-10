@@ -6,7 +6,7 @@ using R2API.Utils;
 
 namespace RiftSurvivor
 {
-    [BepInPlugin("local.r2mod.riftsurvivor", "小黑大哥合集", "0.5.27")]
+    [BepInPlugin("local.r2mod.riftsurvivor", "小黑大哥合集", "0.5.28")]
     [BepInDependency(R2APIContentManager.PluginGUID)]
     [BepInDependency(PrefabAPI.PluginGUID)]
     [BepInDependency(LanguageAPI.PluginGUID)]
@@ -43,6 +43,7 @@ namespace RiftSurvivor
             CombatVisuals.Initialize();
             CombatStatusHud.Register();
             HiddenFlight.Register();
+            DownedRescue.Register();
             Logger.LogInfo($"{Info.Metadata.Name} {Info.Metadata.Version}: 已注册 {registered}/{Roster.Length} 位角色。");
         }
     }

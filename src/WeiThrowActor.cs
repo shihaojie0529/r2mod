@@ -219,7 +219,7 @@ namespace RiftSurvivor
             if (!NetworkServer.active || mode == Mode.Done) return;
             if (mode == Mode.Grounded) { if (Time.fixedTime >= ends) Cancel(); return; }
             if (mode == Mode.Falling) { Fall(); return; }
-            if (!owner || !owner.healthComponent.alive || cargo == Cargo.Enemy && (!health || !health.alive))
+            if (!DownedRescue.IsUp(owner) || cargo == Cargo.Enemy && (!health || !health.alive))
             { Cancel(); return; }
             if (mode == Mode.Held) { FollowHand(); return; }
             if (Time.fixedTime >= ends)

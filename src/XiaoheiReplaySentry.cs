@@ -30,7 +30,7 @@ namespace RiftSurvivor
         }
         internal static GameObject Spawn(CharacterBody body, Ray aim, int highlights)
         {
-            if (!NetworkServer.active || !body || !body.healthComponent || !body.healthComponent.alive) return null;
+            if (!NetworkServer.active || !DownedRescue.IsUp(body)) return null;
             var heading = Vector3.ProjectOnPlane(aim.direction, Vector3.up);
             if (heading.sqrMagnitude < .001f) heading = body.transform.forward;
             var go = Instantiate(prefab, body.footPosition, Quaternion.LookRotation(heading));
@@ -81,7 +81,7 @@ namespace RiftSurvivor
         private void FixedUpdate()
         {
             if (!NetworkServer.active || !initialized) return;
-            if (!owner || !owner.healthComponent || !owner.healthComponent.alive || Time.fixedTime >= ends)
+            if (!DownedRescue.IsUp(owner) || Time.fixedTime >= ends)
             { NetworkServer.Destroy(gameObject); return; }
             float age = Time.fixedTime-began;
             while (scheduled < total && age >= FirstShot + scheduled*(LastShot-FirstShot)/(total-1))
@@ -123,7 +123,7 @@ namespace RiftSurvivor
                 var bodyObject=ClientScene.FindLocalObject(ownerId);
                 if (bodyObject) owner=bodyObject.GetComponent<CharacterBody>();
             }
-            if (!owner || !owner.healthComponent || !owner.healthComponent.alive) return;
+            if (!DownedRescue.IsUp(owner)) return;
             if (!visual)
             {
                 visual=XiaoheiReplayAvatar.Show(owner,transform.position-owner.footPosition,transform.forward);

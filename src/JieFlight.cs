@@ -72,7 +72,7 @@ namespace RiftSurvivor
 
         internal void Mount()
         {
-            if (!body.hasEffectiveAuthority || !body.healthComponent.alive) return;
+            if (!body.hasEffectiveAuthority || !DownedRescue.IsUp(body)) return;
             if (!(flightMachine.state is JieHover)) flightMachine.SetNextState(new JieHover());
             canDismount = false;
             pressedAt = Time.fixedTime;
@@ -99,7 +99,7 @@ namespace RiftSurvivor
 
         private void FixedUpdate()
         {
-            if (!body.hasEffectiveAuthority || !body.healthComponent || !body.healthComponent.alive || !body.inputBank) return;
+            if (!body.hasEffectiveAuthority || !DownedRescue.IsUp(body) || !body.inputBank) return;
             var motor = body.characterMotor;
             bool down = body.inputBank.jump.down;
             bool press = down && !wasDown, release = !down && wasDown;
@@ -153,7 +153,7 @@ namespace RiftSurvivor
             base.OnEnter();
             var slot = skillLocator ? skillLocator.utility : null;
             var flight = GetComponent<JieFlight>();
-            if (!flight || !healthComponent || !healthComponent.alive || !slot ||
+            if (!flight || !DownedRescue.IsUp(characterBody) || !slot ||
                 slot.stateMachine != outer || slot.activationState.stateType != typeof(JieDash)) return;
             if (UnityEngine.Networking.NetworkServer.active &&
                 !CuiServerCharges.TrySpend(characterBody, slot, true)) return;

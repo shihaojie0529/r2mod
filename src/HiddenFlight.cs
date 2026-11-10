@@ -46,7 +46,7 @@ namespace RiftSurvivor
                 var body = user.cachedBody;
                 if (user.inputPlayer == null || !user.inputPlayer.controllers.hasKeyboard || !body ||
                     !body.isPlayerControlled || !body.hasEffectiveAuthority || !body.healthComponent ||
-                    !body.healthComponent.alive || !body.inputBank || !CanReadKeys(user)) continue;
+                    !DownedRescue.IsUp(body) || !body.inputBank || !CanReadKeys(user)) continue;
                 var flight = body.GetComponent<HiddenFlight>();
                 if (flight && flight.enabled)
                 {
@@ -129,7 +129,7 @@ namespace RiftSurvivor
         {
             if (owner == null || owner.cachedBody != body || owner.inputPlayer == null ||
                 !owner.inputPlayer.controllers.hasKeyboard || !body.hasEffectiveAuthority ||
-                !body.isPlayerControlled || !body.healthComponent || !body.healthComponent.alive)
+                !body.isPlayerControlled || !DownedRescue.IsUp(body))
             {
                 enabled = false;
                 return;

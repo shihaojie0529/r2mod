@@ -120,7 +120,7 @@ namespace RiftSurvivor
             foreach (var member in TeamComponent.GetTeamMembers(team))
             {
                 var body = member.body;
-                if (!body || !body.isPlayerControlled || !body.healthComponent || !body.healthComponent.alive) continue;
+                if (!body || !body.isPlayerControlled || !DownedRescue.IsUp(body)) continue;
                 var here = body.corePosition;
                 if (!visits.TryGetValue(body, out var visit))
                 {

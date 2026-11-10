@@ -237,7 +237,7 @@ namespace RiftSurvivor
 
         private void AdvanceSwarm()
         {
-            if (!body.healthComponent.alive) { swarmLeft = 0; return; }
+            if (!DownedRescue.IsUp(body)) { swarmLeft = 0; return; }
             swarmCredit += Time.fixedDeltaTime * SwarmPerSecond;
             for (; swarmCredit >= 1f && swarmLeft > 0; swarmCredit -= 1f, swarmLeft--)
             {
@@ -308,7 +308,7 @@ namespace RiftSurvivor
             if (NetworkServer.active && held)
             {
                 var state = body.skillLocator.secondary.stateMachine.state;
-                if (!body.healthComponent.alive || !(state is WeiCut) && !(state is WeiPaste))
+                if (!DownedRescue.IsUp(body) || !(state is WeiCut) && !(state is WeiPaste))
                 { held.Cancel(); held = null; }
             }
             else if (!NetworkServer.active && body.hasEffectiveAuthority)
@@ -321,7 +321,7 @@ namespace RiftSurvivor
         private void LateUpdate()
         {
             if (!NetworkClient.active || !body.hasEffectiveAuthority || !body.isPlayerControlled || !body.inputBank ||
-                !body.healthComponent || !body.healthComponent.alive)
+                !DownedRescue.IsUp(body))
             { if (preview) preview.SetActive(false); return; }
             if (Time.time >= previewAt)
             {

@@ -61,7 +61,7 @@ namespace RiftSurvivor
         internal static void OnCuiThroughDoor(CharacterBody wei, CharacterBody traveler)
         {
             if (!NetworkServer.active || !wei || !traveler || !traveler.GetComponent<CuiVitals>() ||
-                !traveler.healthComponent.alive || wei.teamComponent.teamIndex != traveler.teamComponent.teamIndex) return;
+                !DownedRescue.IsUp(traveler) || wei.teamComponent.teamIndex != traveler.teamComponent.teamIndex) return;
             traveler.healthComponent.AddBarrier(traveler.healthComponent.fullHealth * .12f);
             WeiVitals.GrantStack(wei);
             XiaoheiCombat.Speak("WEIGE_COACH");

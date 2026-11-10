@@ -152,7 +152,7 @@ namespace RiftSurvivor
         internal bool ReleaseCharge(float requested, out float seconds)
         {
             seconds = 0f;
-            if (!NetworkServer.active || !chargePermit || !body.healthComponent.alive ||
+            if (!NetworkServer.active || !chargePermit || !DownedRescue.IsUp(body) ||
                 (!windingUp && Time.fixedTime - chargeExited > .25f) ||
                 Time.fixedTime - chargeBegan > CuiChargeWindup.MaxHold + 1f || float.IsNaN(requested) || float.IsInfinity(requested)) return false;
             chargePermit = windingUp = false;

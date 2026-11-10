@@ -140,7 +140,7 @@ namespace RiftSurvivor
 
         internal static void OnCup(CharacterBody recipient)
         {
-            if (!NetworkServer.active || !recipient || !recipient.healthComponent.alive) return;
+            if (!NetworkServer.active || !DownedRescue.IsUp(recipient)) return;
             var shooter = recipient.GetComponent<XiaoheiCombat>();
             if (!shooter) return;
             shooter.AddHighlight();
@@ -193,7 +193,7 @@ namespace RiftSurvivor
             {
                 var mark = marks[i];
                 var shooter = mark.shooter;
-                if (mark.ends <= Time.fixedTime || !shooter || !shooter.healthComponent.alive ||
+                if (mark.ends <= Time.fixedTime || !DownedRescue.IsUp(shooter) ||
                     shooter.teamComponent.teamIndex != jie.teamComponent.teamIndex || (mark.swordBonds & trigger) != 0)
                     continue;
                 // Reserve this half and the completion before damage can re-enter.
@@ -214,7 +214,7 @@ namespace RiftSurvivor
             {
                 var mark = marks[i];
                 var shooter = mark.shooter;
-                if (mark.used || mark.ends <= Time.fixedTime || !shooter || !shooter.healthComponent.alive ||
+                if (mark.used || mark.ends <= Time.fixedTime || !DownedRescue.IsUp(shooter) ||
                     shooter.teamComponent.teamIndex != cui.teamComponent.teamIndex) continue;
                 mark.used = true; // Claim before any item proc or secondary damage can re-enter.
                 var muzzle = XiaoheiModel.Muzzle(shooter);

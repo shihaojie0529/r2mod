@@ -51,7 +51,7 @@ namespace RiftSurvivor
             main = EntityStateMachine.FindByCustomName(gameObject, "Body");
         }
 
-        internal bool BodyReady() => body && body.isPlayerControlled && !body.allSkillsDisabled && body.healthComponent && body.healthComponent.alive &&
+        internal bool BodyReady() => body && body.isPlayerControlled && !body.allSkillsDisabled && DownedRescue.IsUp(body) &&
             main && main.state is GenericCharacterMain && main.IsInMainState() && !main.HasPendingState();
 
         internal static bool Valid(CharacterBody caster, HurtBox target)

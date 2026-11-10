@@ -194,7 +194,7 @@ namespace RiftSurvivor
 
         private void FixedUpdate()
         {
-            if (!body || !body.healthComponent || !body.healthComponent.alive)
+            if (!DownedRescue.IsUp(body))
             {
                 ClearOrigin();
                 slideRemaining = 0f;

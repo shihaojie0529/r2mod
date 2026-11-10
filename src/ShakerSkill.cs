@@ -38,18 +38,19 @@ namespace RiftSurvivor
             foreach(var member in TeamComponent.GetTeamMembers(caster.teamComponent.teamIndex))
             {
                 var body=member.body;
-                if(body && body.healthComponent && body.healthComponent.alive)recipients.Add(body);
+                if(DownedRescue.IsUp(body))recipients.Add(body);
             }
             if(!recipients.Contains(caster))recipients.Add(caster);
             int count=0;
             foreach(var body in recipients)
             {
-                if(!body || !body.healthComponent || !body.healthComponent.alive)continue;
+                if(!DownedRescue.IsUp(body))continue;
                 body.healthComponent.Heal(body.healthComponent.fullHealth*(empowered?EmpoweredHeal:NormalHeal),default,true);
                 SkillSpectacle.Emit(SpectacleKind.Supply,body.corePosition,Vector3.up,empowered?3f:2f);
                 if(body!=caster)XiaoheiCombat.OnCup(body);
                 count++;
             }
+            DownedRescue.ApplySupply(caster,empowered?EmpoweredHeal:NormalHeal);
             return count;
         }
         public override void FixedUpdate()

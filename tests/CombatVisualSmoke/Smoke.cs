@@ -336,6 +336,7 @@ public partial class Smoke : BaseUnityPlugin
         yield return CheckEchoAndLanding();
         yield return CheckRequestedVfx();
         CheckReplaySentry();
+        CheckDownedRescue();
         foreach (var argument in Environment.GetCommandLineArgs())
             if (argument.StartsWith("--lobby-preview-out=", StringComparison.Ordinal))
                 yield return LobbyPreview.Capture(Mod, argument.Substring("--lobby-preview-out=".Length),

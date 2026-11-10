@@ -110,7 +110,7 @@ namespace RiftSurvivor
         {
             base.FixedUpdate();
             if (!isAuthority) return;
-            if (!Combat || !healthComponent.alive) { outer.SetNextStateToMain(); return; }
+            if (!Combat || !DownedRescue.IsUp(characterBody)) { outer.SetNextStateToMain(); return; }
             if (characterBody.isPlayerControlled && IsKeyDownAuthority())
             {
                 if (Combat.Carrying) StartAimMode(.25f);

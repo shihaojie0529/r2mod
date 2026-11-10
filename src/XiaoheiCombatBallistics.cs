@@ -204,7 +204,7 @@ namespace RiftSurvivor
 
         private void FixedUpdate()
         {
-            if (!body || !body.healthComponent.alive) { Destroy(this); return; }
+            if (!DownedRescue.IsUp(body)) { Destroy(this); return; }
             double elapsed = Time.fixedTimeAsDouble - began;
             while (fired < total && elapsed + .00001 >= fired * Duration / (total - 1))
                 Fire(body.inputBank ? body.inputBank.GetAimRay() : initialAim);
@@ -242,7 +242,7 @@ namespace RiftSurvivor
 
         private void LateUpdate()
         {
-            if (!body || !body.healthComponent.alive) { Destroy(gameObject); return; }
+            if (!DownedRescue.IsUp(body)) { Destroy(gameObject); return; }
             if (!body.inputBank) return;
             var direction = XiaoheiBallistics.ReplayDirection(body, body.inputBank.GetAimRay(), muzzle);
             var heading = Vector3.ProjectOnPlane(direction, Vector3.up);

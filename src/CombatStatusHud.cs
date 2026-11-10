@@ -52,7 +52,7 @@ namespace RiftSurvivor
         {
             if (!NetworkServer.active || Time.fixedTime < nextPublish || !body) return;
             nextPublish = Time.fixedTime + .1f;
-            bool alive = body.healthComponent && body.healthComponent.alive;
+            bool alive = DownedRescue.IsUp(body);
             Publish(stormClock, alive ? stormEnds : 0f);
             Publish(replayClock, alive ? replayEnds : 0f);
         }
@@ -137,6 +137,12 @@ namespace RiftSurvivor
             return null;
         }
 
+        internal static Font LabelFont()
+        {
+            if (!font) font = Font.CreateDynamicFontFromOSFont(new[] { "Microsoft YaHei", "SimHei", "Arial" }, 14);
+            return font;
+        }
+
         private static Text CreateBadge(SkillIcon icon)
         {
             if (!icon.iconImage) return null;
@@ -150,9 +156,8 @@ namespace RiftSurvivor
             rect.pivot = new Vector2(.5f, 0f);
             rect.anchoredPosition = new Vector2(0f, 4f);
             rect.sizeDelta = new Vector2(0f, 32f);
-            if (!font) font = Font.CreateDynamicFontFromOSFont(new[] { "Microsoft YaHei", "SimHei", "Arial" }, 14);
             var label = textObject.GetComponent<Text>();
-            label.font = font;
+            label.font = LabelFont();
             label.fontSize = 14;
             label.resizeTextForBestFit = true;
             label.resizeTextMinSize = 9;

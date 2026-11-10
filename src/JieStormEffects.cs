@@ -207,7 +207,7 @@ namespace RiftSurvivor
             switch (kind)
             {
                 case JieStormVisualKind.Fan:
-                    if (!reference || !reference.healthComponent.alive || age >= JieGoldVolley.Duration) { Destroy(gameObject); return; }
+                    if (!DownedRescue.IsUp(reference) || age >= JieGoldVolley.Duration) { Destroy(gameObject); return; }
                     if (blades == null) return;
                     var facing = reference.inputBank ? Vector3.ProjectOnPlane(reference.inputBank.aimDirection, Vector3.up) : reference.transform.forward;
                     if (facing.sqrMagnitude < .001f) facing = reference.transform.forward;
@@ -232,7 +232,7 @@ namespace RiftSurvivor
                     if (age >= duration) Destroy(gameObject);
                     break;
                 case JieStormVisualKind.Seal:
-                    if (!reference || !reference.healthComponent.alive || age >= JieGoldVolley.Duration) { Destroy(gameObject); return; }
+                    if (!DownedRescue.IsUp(reference) || age >= JieGoldVolley.Duration) { Destroy(gameObject); return; }
                     transform.position = JieStormEffects.SealPoint(reference);
                     break;
                 case JieStormVisualKind.Heaven:
